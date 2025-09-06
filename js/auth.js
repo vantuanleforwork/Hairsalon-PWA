@@ -55,15 +55,26 @@ window.initAuth = function(callbacks = {}) {
 
 // Initialize Google Sign-In
 function initializeGoogleSignIn() {
+    console.log('🔍 Checking Google Sign-In prerequisites...');
+    
+    // Check if Google API is loaded
     if (typeof google === 'undefined' || !google.accounts) {
-        console.error('❌ Google Identity Services not available');
+        console.warn('⏳ Google API not ready, retrying in 1s...');
+        setTimeout(initializeGoogleSignIn, 1000);
         return;
     }
     
-    if (!window.APP_CONFIG || !window.APP_CONFIG.GOOGLE_CLIENT_ID) {
-        console.error('❌ Google Client ID not configured!');
+    // Check if config is loaded
+    if (!window.APP_CONFIG) {
+        console.warn('⏳ Config not loaded, retrying in 1s...');
+        setTimeout(initializeGoogleSignIn, 1000);
+        return;
+    }
+    
+    // Check if Client ID exists
+    if (!window.APP_CONFIG.GOOGLE_CLIENT_ID) {
+        console.error('❌ No Google Client ID in config!');
         console.error('APP_CONFIG:', window.APP_CONFIG);
-        showError('Ứng dụng chưa được cấu hình OAuth. Vui lòng liên hệ admin.');
         return;
     }
     
