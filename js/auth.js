@@ -103,12 +103,28 @@ function initializeGoogleSignIn() {
         // Render the sign-in button if container exists
         const buttonContainer = document.getElementById('googleLoginContainer');
         if (buttonContainer) {
-            google.accounts.id.renderButton(buttonContainer, {
+            // Remove placeholder if exists
+            const placeholder = document.getElementById('googleButtonPlaceholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            // Clear any existing content first
+            buttonContainer.innerHTML = '';
+            
+            // Create a wrapper div for better control
+            const buttonWrapper = document.createElement('div');
+            buttonWrapper.style.width = '100%';
+            buttonWrapper.style.maxWidth = '400px';
+            buttonWrapper.style.margin = '0 auto';
+            buttonContainer.appendChild(buttonWrapper);
+            
+            google.accounts.id.renderButton(buttonWrapper, {
                 type: 'standard',
-                theme: 'outline',
+                theme: 'outline',  // Keep original theme
                 size: 'large',
                 text: 'signin_with',
-                width: '100%',
+                width: '100%',  // Keep original width setting
                 locale: 'vi'
             });
             console.log('✅ Google button rendered');

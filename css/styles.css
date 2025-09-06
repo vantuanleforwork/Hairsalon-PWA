@@ -82,17 +82,36 @@ button, [role="button"] {
 
 /* Google OAuth button container */
 #googleLoginContainer {
-    min-height: 44px; /* iOS minimum touch target */
+    min-height: 44px; /* Standard height for button */
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 4px 0;
 }
 
-/* Google OAuth button styling */
+/* Google OAuth button wrapper - Ensure centering */
 #googleLoginContainer > div {
     width: 100% !important;
     max-width: 400px;
-    margin: 0 auto;
+    margin: 0 auto !important;
+}
+
+/* Fix alignment for rendered Google button */
+#googleLoginContainer > div > div,
+#googleLoginContainer > div > iframe {
+    margin: 0 auto !important;
+    display: block !important;
+}
+
+/* Style for the placeholder to match Google button */
+#googleButtonPlaceholder {
+    border: 1px solid #dadce0;
+    transition: opacity 0.3s ease;
+}
+
+/* Prevent any layout shift */
+#googleLoginContainer:not(:empty) #googleButtonPlaceholder {
+    display: none;
 }
 
 /* Removed fallback manual login button styles (loginBtn) */
