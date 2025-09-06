@@ -40,6 +40,7 @@ function initializeElements() {
         
         // Auth elements
         loginBtn: document.getElementById('loginBtn'),
+        googleLoginContainer: document.getElementById('googleLoginContainer'),
         logoutBtn: document.getElementById('logoutBtn'),
         userEmail: document.getElementById('userEmail'),
         
@@ -477,6 +478,127 @@ function showMainApp() {
 function showLoginScreen() {
     elements.loginScreen.classList.remove('hidden');
     elements.mainApp.classList.add('hidden');
+    
+    // Try to render Google OAuth button
+    setTimeout(() => {
+        renderGoogleLoginButton();
+    }, 1000);
+}
+
+// Render Google OAuth button
+function renderGoogleLoginButton() {
+    if (typeof google === 'undefined' || !google.accounts) {
+        console.warn('Google Identity Services not loaded yet');
+        // Show fallback button
+        elements.loginBtn.style.display = 'flex';
+        return;
+    }
+    
+    // Check if we have valid client ID
+    if (typeof APP_CONFIG === 'undefined' || 
+        !APP_CONFIG.GOOGLE_CLIENT_ID || 
+        APP_CONFIG.GOOGLE_CLIENT_ID.includes('DEMO_CLIENT_ID')) {
+        console.warn('No valid Google Client ID, showing fallback');
+        elements.loginBtn.style.display = 'flex';
+        return;
+    }
+    
+    try {
+        // Initialize Google OAuth if not done
+        google.accounts.id.initialize({
+            client_id: APP_CONFIG.GOOGLE_CLIENT_ID,
+            callback: (response) => {
+                // Handle login response
+                if (typeof AUTH !== 'undefined') {
+                    AUTH.handleCredentialResponse?.(response);
+                } else {
+                    handleGoogleResponse(response);
+                }
+            }
+        });
+        
+        // Render Google button
+        google.accounts.id.renderButton(elements.googleLoginContainer, {
+            type: 'standard',
+            size: 'large',
+            text: 'signin_with',
+            shape: 'rectangular',
+            logo_alignment: 'left',
+            theme: 'outline',
+            width: '100%'
+        });
+        
+        // Hide fallback button
+        elements.loginBtn.style.display = 'none';
+        
+        console.log('Google OAuth button rendered');
+        
+    } catch (error) {
+        console.error('Error rendering Google button:', error);
+        // Show fallback button
+        elements.loginBtn.style.display = 'flex';
+    }
+}
+
+// Handle Google OAuth response (fallback)
+function handleGoogleResponse(response) {
+    console.log('Handling Google OAuth response');
+    
+    if (!response || !response.credential) {
+        showToast('Lỗi đăng nhập. Vui lòng thử lại.', 'error');
+        return;
+    }
+    
+    try {
+        // Parse JWT token
+        const token = response.credential;
+        const payload = parseJwt(token);
+        
+        console.log('User email:', payload.email);
+        
+        // Check if email is allowed
+        if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.ALLOWED_EMAILS) {
+            if (!APP_CONFIG.ALLOWED_EMAILS.includes(payload.email)) {
+                showToast(`Email ${payload.email} không được phép truy cập. Liên hệ admin.`, 'error');
+                return;
+            }
+        }
+        
+        // Create user object
+        const user = {
+            id: payload.sub,
+            email: payload.email,
+            name: payload.name,
+            picture: payload.picture,
+            token: token
+        };
+        
+        // Save user
+        APP_STATE.user = user;
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        // Show main app
+        showMainApp();
+        showToast(`Xin chào ${user.name || user.email}!`, 'success');
+        
+    } catch (error) {
+        console.error('Error processing Google response:', error);
+        showToast('Lỗi xử lý đăng nhập. Vui lòng thử lại.', 'error');
+    }
+}
+
+// Parse JWT token
+function parseJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        throw new Error('Error parsing JWT token');
+    }
 }
 
 // Handle online status
