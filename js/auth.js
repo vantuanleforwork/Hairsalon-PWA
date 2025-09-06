@@ -1,150 +1,183 @@
-// Simple Authentication Module
+// Google OAuth Authentication Module for Salon Manager
 'use strict';
 
-console.log('🔐 Loading auth module...');
+console.log('🔐 Auth module loading...');
 
 // Global auth state
 window.AUTH_STATE = {
     user: null,
-    isLoggedIn: false
+    isLoggedIn: false,
+    initialized: false
 };
 
-// Simple init function
+// Initialize authentication
 window.initAuth = function(callbacks = {}) {
-    console.log('⚙️ Initializing simple auth...');
+    console.log('🚀 Initializing authentication...');
     
-    // Store callbacks globally
+    // Store callbacks
     window.authCallbacks = callbacks;
     
-    // Check for existing user - DISABLED for testing fresh login
-    /*
+    // Check for saved user session
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
         try {
             const user = JSON.parse(savedUser);
-            // Check if email is allowed
-            if (isEmailAllowed(user.email)) {
+            // Validate saved user
+            if (user && user.email && isEmailAllowed(user.email)) {
                 window.AUTH_STATE.user = user;
                 window.AUTH_STATE.isLoggedIn = true;
-                console.log('✅ Found saved user:', user.email);
+                console.log('✅ Restored session for:', user.email);
+                
+                // Auto-login with saved user
                 if (callbacks.onLoginSuccess) {
                     callbacks.onLoginSuccess(user);
                 }
                 return;
-            } else {
-                // Remove invalid user
-                localStorage.removeItem('user');
             }
         } catch (e) {
-            localStorage.removeItem('user');
+            console.warn('Invalid saved user data');
         }
+        // Clear invalid session
+        localStorage.removeItem('user');
     }
-    */
     
-    console.log('📝 No valid saved user found');
+    // Initialize Google Sign-In when API is ready
+    if (typeof google !== 'undefined' && google.accounts) {
+        initializeGoogleSignIn();
+    } else {
+        // Wait for Google API to load
+        console.log('⏳ Waiting for Google API...');
+        window.addEventListener('load', () => {
+            setTimeout(initializeGoogleSignIn, 1000);
+        });
+    }
 };
 
-// Google login function - REAL OAUTH ONLY
-window.loginWithGoogle = function() {
-    console.log('🚀 Starting Google OAuth login...');
-    
-    // Check if Google API is loaded
+// Initialize Google Sign-In
+function initializeGoogleSignIn() {
     if (typeof google === 'undefined' || !google.accounts) {
-        console.error('❌ Google Identity Services not loaded!');
-        alert('Google login không khả dụng. Vui lòng refresh trang.');
+        console.error('❌ Google Identity Services not available');
         return;
     }
     
-    // Check client ID
     if (!window.APP_CONFIG || !window.APP_CONFIG.GOOGLE_CLIENT_ID) {
-        console.error('❌ No Google Client ID configured!');
-        alert('OAuth chưa được cấu hình. Liên hệ admin.');
+        console.error('❌ Google Client ID not configured!');
+        console.error('APP_CONFIG:', window.APP_CONFIG);
+        showError('Ứng dụng chưa được cấu hình OAuth. Vui lòng liên hệ admin.');
         return;
     }
     
-    console.log('⚙️ Initializing Google OAuth...');
+    // Log config for debug
+    console.log('📋 OAuth Config:', {
+        clientId: window.APP_CONFIG.GOOGLE_CLIENT_ID.substring(0, 20) + '...',
+        currentOrigin: window.location.origin,
+        protocol: window.location.protocol
+    });
     
     try {
-        // Initialize Google OAuth
+        // Initialize the Google Sign-In client
         google.accounts.id.initialize({
             client_id: window.APP_CONFIG.GOOGLE_CLIENT_ID,
-            callback: window.handleGoogleCallback,
+            callback: handleGoogleResponse,
             auto_select: false,
-            cancel_on_tap_outside: false
+            cancel_on_tap_outside: true,
+            context: 'signin',
+            ux_mode: 'popup',
+            itp_support: true
         });
         
-        // Show the One Tap prompt
-        google.accounts.id.prompt((notification) => {
-            if (notification.isNotDisplayed()) {
-                console.log('⚠️ One Tap not displayed:', notification.getNotDisplayedReason());
-                // Force show popup by creating button and clicking it
-                showGoogleLoginPopup();
-            }
-        });
+        window.AUTH_STATE.initialized = true;
+        console.log('✅ Google Sign-In initialized');
+        
+        // Render the sign-in button if container exists
+        const buttonContainer = document.getElementById('googleLoginContainer');
+        if (buttonContainer) {
+            google.accounts.id.renderButton(buttonContainer, {
+                type: 'standard',
+                theme: 'outline',
+                size: 'large',
+                text: 'signin_with',
+                width: '100%',
+                locale: 'vi'
+            });
+            console.log('✅ Google button rendered');
+        }
         
     } catch (error) {
-        console.error('❌ Google OAuth initialization error:', error);
-        alert('Lỗi khởi tạo Google OAuth: ' + error.message);
-    }
-};
-
-// Show Google login popup
-function showGoogleLoginPopup() {
-    try {
-        // Create temporary div for Google button
-        const buttonDiv = document.createElement('div');
-        buttonDiv.style.position = 'fixed';
-        buttonDiv.style.top = '-1000px'; // Hide off-screen
-        document.body.appendChild(buttonDiv);
-        
-        // Render Google button
-        google.accounts.id.renderButton(buttonDiv, {
-            theme: 'outline',
-            size: 'large',
-            type: 'standard',
-            width: '200'
-        });
-        
-        // Auto-click the button to trigger popup
-        setTimeout(() => {
-            const googleBtn = buttonDiv.querySelector('[role="button"]');
-            if (googleBtn) {
-                googleBtn.click();
-            } else {
-                console.error('❌ Could not find Google button to click');
-                alert('Không thể tạo popup đăng nhập. Thử lại sau.');
-            }
-            // Clean up
-            document.body.removeChild(buttonDiv);
-        }, 100);
-        
-    } catch (error) {
-        console.error('❌ Error creating Google popup:', error);
-        alert('Lỗi tạo popup Google: ' + error.message);
+        console.error('❌ Failed to initialize Google Sign-In:', error);
+        showError('Không thể khởi tạo Google Sign-In');
     }
 }
 
-// Google OAuth callback
-window.handleGoogleCallback = function(response) {
-    console.log('🔐 Google callback received');
+// Login with Google
+window.loginWithGoogle = function() {
+    console.log('🔐 Login button clicked');
+    
+    if (!window.AUTH_STATE.initialized) {
+        console.log('Initializing Google Sign-In first...');
+        initializeGoogleSignIn();
+        setTimeout(() => {
+            if (window.AUTH_STATE.initialized) {
+                triggerGoogleSignIn();
+            }
+        }, 500);
+        return;
+    }
+    
+    triggerGoogleSignIn();
+};
+
+// Trigger Google Sign-In flow
+function triggerGoogleSignIn() {
+    try {
+        // Try One Tap first
+        google.accounts.id.prompt((notification) => {
+            console.log('One Tap status:', notification);
+            if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                // Fallback to button click
+                console.log('One Tap not shown, using button click');
+                const googleBtn = document.querySelector('#googleLoginContainer > div[role="button"]');
+                if (googleBtn) {
+                    googleBtn.click();
+                } else {
+                    console.error('Google button not found');
+                    showError('Không tìm thấy nút đăng nhập Google');
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error triggering sign-in:', error);
+        showError('Lỗi khi mở cửa sổ đăng nhập');
+    }
+}
+
+// Handle Google Sign-In response
+function handleGoogleResponse(response) {
+    console.log('📨 Google response received');
     
     if (!response || !response.credential) {
-        console.error('❌ No credential received');
-        showError('Lỗi đăng nhập. Vui lòng thử lại.');
+        console.error('No credential in response');
+        showError('Không nhận được thông tin đăng nhập');
         return;
     }
     
     try {
-        // Parse JWT
-        const token = response.credential;
-        const payload = parseJWT(token);
+        // Decode the JWT credential
+        const credential = response.credential;
+        const payload = parseJWT(credential);
         
-        console.log('📝 Parsed user email:', payload.email);
+        console.log('👤 User info:', {
+            email: payload.email,
+            name: payload.name,
+            verified: payload.email_verified
+        });
         
-        // Check email whitelist
+        // Check if email is allowed
         if (!isEmailAllowed(payload.email)) {
-            console.warn('❌ Email not allowed:', payload.email);
-            showError(`Email ${payload.email} không được phép truy cập. Liên hệ admin.`);
+            console.warn('⛔ Unauthorized email:', payload.email);
+            showError(`Email ${payload.email} không được phép sử dụng hệ thống.\nVui lòng liên hệ quản trị viên.`);
+            // Sign out from Google
+            google.accounts.id.disableAutoSelect();
             return;
         }
         
@@ -152,72 +185,98 @@ window.handleGoogleCallback = function(response) {
         const user = {
             id: payload.sub,
             email: payload.email,
-            name: payload.name || payload.email,
-            picture: payload.picture,
-            token: token
+            name: payload.name || payload.email.split('@')[0],
+            picture: payload.picture || null,
+            loginTime: new Date().toISOString()
         };
         
-        // Save user
+        // Update auth state
         window.AUTH_STATE.user = user;
         window.AUTH_STATE.isLoggedIn = true;
+        
+        // Save to localStorage for session persistence
         localStorage.setItem('user', JSON.stringify(user));
         
-        console.log('✅ Login successful:', user.name);
+        console.log('✅ Login successful for:', user.email);
         
-        // Call success callback
+        // Trigger success callback
         if (window.authCallbacks && window.authCallbacks.onLoginSuccess) {
             window.authCallbacks.onLoginSuccess(user);
         }
         
     } catch (error) {
-        console.error('❌ Error processing login:', error);
-        showError('Lỗi xử lý đăng nhập.');
+        console.error('❌ Error processing credential:', error);
+        showError('Lỗi xử lý thông tin đăng nhập');
     }
-};
+}
 
-// Simple logout
+// Logout function
 window.logoutUser = function() {
-    console.log('💪 Logging out...');
+    console.log('👋 Logging out...');
     
-    // Clear state
+    // Clear auth state
     window.AUTH_STATE.user = null;
     window.AUTH_STATE.isLoggedIn = false;
+    
+    // Clear localStorage
     localStorage.removeItem('user');
     
-    // Google logout
-    if (typeof google !== 'undefined' && google.accounts) {
+    // Revoke Google Sign-In
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         google.accounts.id.disableAutoSelect();
+        // Optional: revoke token
+        const user = window.AUTH_STATE.user;
+        if (user && user.email) {
+            google.accounts.id.revoke(user.email, done => {
+                console.log('Token revoked:', done);
+            });
+        }
     }
     
-    // Call logout callback
+    // Trigger logout callback
     if (window.authCallbacks && window.authCallbacks.onLogout) {
         window.authCallbacks.onLogout();
     }
     
-    console.log('✅ Logout complete');
+    console.log('✅ Logout completed');
 };
 
 // Check if email is allowed
 function isEmailAllowed(email) {
+    // Check config
     if (!window.APP_CONFIG || !window.APP_CONFIG.ALLOWED_EMAILS) {
+        console.warn('No email whitelist configured');
         return true; // Allow all if no config
     }
-    return window.APP_CONFIG.ALLOWED_EMAILS.includes(email);
+    
+    const allowed = window.APP_CONFIG.ALLOWED_EMAILS.includes(email.toLowerCase());
+    console.log(`Email ${email} is ${allowed ? 'allowed ✅' : 'blocked ⛔'}`);
+    return allowed;
 }
 
 // Parse JWT token
 function parseJWT(token) {
     try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-            atob(base64)
-                .split('')
-                .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join('')
-        );
-        return JSON.parse(jsonPayload);
+        // Split token and get payload
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+            throw new Error('Invalid token format');
+        }
+        
+        // Decode base64url
+        const base64 = parts[1]
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+        
+        // Pad with = if needed
+        const padded = base64 + '=='.substring(0, (4 - base64.length % 4) % 4);
+        
+        // Decode and parse
+        const decoded = atob(padded);
+        return JSON.parse(decoded);
+        
     } catch (error) {
+        console.error('JWT parse error:', error);
         throw new Error('Invalid JWT token');
     }
 }
@@ -225,23 +284,34 @@ function parseJWT(token) {
 
 // Show error message
 function showError(message) {
-    if (window.showToast) {
+    console.error('Auth error:', message);
+    
+    // Try different methods to show error
+    if (typeof window.showToast === 'function') {
         window.showToast(message, 'error');
     } else if (window.authCallbacks && window.authCallbacks.onLoginError) {
         window.authCallbacks.onLoginError(message);
     } else {
+        // Fallback to alert
         alert(message);
     }
 }
 
-// Create AUTH object for backward compatibility
+// Public API
 window.AUTH = {
     init: window.initAuth,
     login: window.loginWithGoogle,
     logout: window.logoutUser,
     isAuthenticated: () => window.AUTH_STATE.isLoggedIn,
-    getCurrentUser: () => window.AUTH_STATE.user
+    getCurrentUser: () => window.AUTH_STATE.user,
+    getState: () => window.AUTH_STATE
 };
 
-console.log('✅ Simple auth module loaded');
-console.log('✅ Available functions:', Object.keys(window.AUTH));
+// Debug info
+if (window.APP_CONFIG && window.APP_CONFIG.DEBUG_MODE) {
+    console.log('✅ Auth module loaded successfully');
+    console.log('📚 Available methods:', Object.keys(window.AUTH));
+    console.log('🔑 Client ID configured:', 
+        !!(window.APP_CONFIG.GOOGLE_CLIENT_ID && 
+           !window.APP_CONFIG.GOOGLE_CLIENT_ID.includes('YOUR_ACTUAL')));
+}

@@ -68,7 +68,48 @@ Web app PWA hoàn chỉnh để quản lý đơn hàng cho salon tóc nhỏ, v�
 
 ### 🏠 Cấu trúc project
 ```
-Hairsalon-PWA/
+# Salon Manager PWA
+
+Ứng dụng quản lý đơn hàng cho salon tóc - Progressive Web App
+
+## 🚀 Tính năng
+
+- ✅ Nhập đơn hàng nhanh chóng
+- ✅ Thống kê doanh thu theo ngày/tháng
+- ✅ Lưu trữ dữ liệu trên Google Sheets
+- ✅ Đăng nhập với Google OAuth 2.0
+- ✅ Giao diện responsive cho mobile
+- ✅ Hoạt động offline (PWA)
+
+## 📱 Sử dụng
+
+### Cách 1: Live Server (VS Code)
+1. Mở project trong VS Code
+2. Cài extension "Live Server"
+3. Right-click vào `index.html` → "Open with Live Server"
+4. Truy cập: http://localhost:5500
+
+### Cách 2: Python HTTP Server
+```bash
+python -m http.server 8080
+```
+Truy cập: http://localhost:8080
+
+## 🔐 Đăng nhập
+
+Sử dụng tài khoản Google đã được cấp quyền trong `config.js`
+
+## 📊 Google Sheets
+
+Dữ liệu được lưu tự động vào Google Sheets với cấu trúc:
+- ID | Timestamp | Nhân viên | Dịch vụ | Giá tiền | Ghi chú | Trạng thái
+
+## 🌐 Deploy
+
+### GitHub Pages
+1. Push code lên GitHub
+2. Settings → Pages → Deploy from branch (main)
+3. Truy cập: https://[username].github.io/Hairsalon-PWA/
 ├── index.html                  # Main app
 ├── manifest.json              # PWA manifest
 ├── js/
