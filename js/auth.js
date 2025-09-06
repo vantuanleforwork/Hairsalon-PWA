@@ -298,5 +298,10 @@ window.AUTH = {
     renderLoginButton: renderLoginButton,
     getCurrentUser: getCurrentUser,
     isAuthenticated: isAuthenticated,
-    isAllowedEmail: isAllowedEmail
+    isAllowedEmail: isAllowedEmail,
+    handleCredentialResponse: handleCredentialResponse
 };
+
+// Also export individual functions
+window.initAuth = initAuth;
+window.handleCredentialResponse = handleCredentialResponse;

@@ -20,7 +20,12 @@ let elements = {};
 document.addEventListener('DOMContentLoaded', () => {
     initializeElements();
     setupEventListeners();
-    initializeAuth();
+    
+    // Delay to ensure all modules are loaded
+    setTimeout(() => {
+        initializeAuth();
+    }, 100);
+    
     updateDateTime();
     
     // Update date/time every minute
@@ -379,8 +384,13 @@ function updateStatistics() {
 
 // Initialize authentication
 function initializeAuth() {
+    console.log('🔑 Initializing auth...');
+    console.log('AUTH available:', typeof AUTH);
+    console.log('AUTH.init available:', typeof AUTH?.init);
+    
     // Initialize Google Auth
-    if (typeof AUTH !== 'undefined') {
+    if (typeof AUTH !== 'undefined' && typeof AUTH.init === 'function') {
+        console.log('✅ Using AUTH module');
         AUTH.init({
             onLoginSuccess: (user) => {
                 console.log('User logged in:', user);
@@ -401,7 +411,7 @@ function initializeAuth() {
             }
         });
     } else {
-        console.warn('AUTH module not loaded, using fallback');
+        console.warn('⚠️ AUTH module not available, using fallback');
         checkLocalAuth();
     }
 }
