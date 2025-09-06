@@ -547,6 +547,9 @@ function updateStatistics() {
 function initializeAuth() {
     console.log('🔑 Starting auth initialization...');
     
+    // Clear any existing saved user to force fresh login
+    localStorage.removeItem('user'); // Force fresh login for testing
+    
     // Check if auth functions exist
     if (typeof window.initAuth === 'function') {
         console.log('✅ Auth functions available, initializing...');
@@ -573,18 +576,7 @@ function initializeAuth() {
         });
     } else {
         console.warn('⚠️ Auth functions not found, using fallback');
-        // Fallback: check localStorage
-        const user = localStorage.getItem('user');
-        if (user) {
-            try {
-                APP_STATE.user = JSON.parse(user);
-                showMainApp();
-            } catch (e) {
-                showLoginScreen();
-            }
-        } else {
-            showLoginScreen();
-        }
+        showLoginScreen();
     }
 }
 
@@ -759,6 +751,30 @@ window.setQuickPrice = function(priceInThousands) {
     // Trigger input event to show preview
     const event = new Event('input', { bubbles: true });
     elements.priceInput.dispatchEvent(event);
+};
+
+// Toggle debug info for OAuth
+window.toggleDebugInfo = function() {
+    const debugDiv = document.getElementById('authDebugInfo');
+    const clientPreview = document.getElementById('clientIdPreview');
+    const googleStatus = document.getElementById('googleApiStatus');
+    
+    if (debugDiv) {
+        debugDiv.classList.toggle('hidden');
+        
+        if (!debugDiv.classList.contains('hidden')) {
+            // Update debug info
+            if (typeof APP_CONFIG !== 'undefined') {
+                const clientId = APP_CONFIG.GOOGLE_CLIENT_ID;
+                clientPreview.textContent = clientId ? clientId.substring(0, 30) + '...' : 'NOT SET';
+            } else {
+                clientPreview.textContent = 'CONFIG NOT LOADED';
+            }
+            
+            googleStatus.textContent = typeof google !== 'undefined' && google.accounts ? 
+                'LOADED ✅' : 'NOT LOADED ❌';
+        }
+    }
 };
 
 // Utility Functions

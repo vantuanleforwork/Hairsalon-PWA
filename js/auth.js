@@ -55,28 +55,69 @@ window.loginWithGoogle = function() {
     
     // Check if we have client ID
     if (!window.APP_CONFIG || !window.APP_CONFIG.GOOGLE_CLIENT_ID || 
-        window.APP_CONFIG.GOOGLE_CLIENT_ID.includes('DEMO')) {
+        window.APP_CONFIG.GOOGLE_CLIENT_ID.includes('DEMO_ID')) {  // Fixed: check for DEMO_ID not DEMO
         console.warn('⚠️ No valid client ID, using mock login');
         mockLogin();
         return;
     }
     
     try {
+        console.log('⚙️ Initializing Google OAuth with Client ID:', window.APP_CONFIG.GOOGLE_CLIENT_ID.substring(0, 20) + '...');
+        
         // Initialize Google OAuth
         google.accounts.id.initialize({
             client_id: window.APP_CONFIG.GOOGLE_CLIENT_ID,
-            callback: window.handleGoogleCallback
+            callback: window.handleGoogleCallback,
+            auto_select: false,
+            cancel_on_tap_outside: false
         });
         
-        // Show One Tap
-        google.accounts.id.prompt((notification) => {
-            if (notification.isNotDisplayed()) {
-                console.log('⚠️ One Tap not displayed');
-            }
-        });
+        // Try popup flow first (more reliable than One Tap)
+        try {
+            // Create a temporary button for popup
+            const tempDiv = document.createElement('div');
+            tempDiv.style.display = 'none';
+            document.body.appendChild(tempDiv);
+            
+            google.accounts.id.renderButton(tempDiv, {
+                theme: 'outline',
+                size: 'large',
+                type: 'standard'
+            });
+            
+            // Trigger the button click
+            setTimeout(() => {
+                const button = tempDiv.querySelector('div[role="button"]');
+                if (button) {
+                    button.click();
+                } else {
+                    // Fallback to One Tap if button render fails
+                    console.log('🔄 Button render failed, trying One Tap...');
+                    google.accounts.id.prompt((notification) => {
+                        if (notification.isNotDisplayed()) {
+                            console.log('⚠️ One Tap not displayed, creating custom popup');
+                            // If One Tap also fails, create a custom popup
+                            createCustomOAuthPopup();
+                        }
+                    });
+                }
+                document.body.removeChild(tempDiv);
+            }, 100);
+            
+        } catch (buttonError) {
+            console.log('⚠️ Button render failed, trying One Tap:', buttonError.message);
+            // Fallback to One Tap
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed()) {
+                    console.log('⚠️ One Tap not displayed, using custom popup');
+                    createCustomOAuthPopup();
+                }
+            });
+        }
         
     } catch (error) {
         console.error('❌ Google login error:', error);
+        console.log('🎭 Falling back to mock login due to OAuth error');
         mockLogin();
     }
 };
@@ -176,6 +217,57 @@ function parseJWT(token) {
         return JSON.parse(jsonPayload);
     } catch (error) {
         throw new Error('Invalid JWT token');
+    }
+}
+
+// Custom OAuth popup for fallback
+function createCustomOAuthPopup() {
+    console.log('📱 Creating custom OAuth popup...');
+    
+    try {
+        // Create OAuth URL
+        const oauthUrl = `https://accounts.google.com/oauth/authorize?` +
+            `client_id=${encodeURIComponent(window.APP_CONFIG.GOOGLE_CLIENT_ID)}&` +
+            `redirect_uri=${encodeURIComponent(window.location.origin)}&` +
+            `response_type=id_token&` +
+            `scope=openid email profile&` +
+            `nonce=${Date.now()}`;
+        
+        // Open popup
+        const popup = window.open(
+            oauthUrl,
+            'googleOAuth',
+            'width=500,height=600,scrollbars=yes,resizable=yes'
+        );
+        
+        if (popup) {
+            console.log('✅ OAuth popup opened');
+            
+            // Check for popup closure
+            const checkClosed = setInterval(() => {
+                if (popup.closed) {
+                    clearInterval(checkClosed);
+                    console.log('⚠️ OAuth popup closed without completing login');
+                    // Don't auto-fallback to mock - let user try again
+                }
+            }, 1000);
+            
+            // Auto-close popup after 60 seconds
+            setTimeout(() => {
+                if (!popup.closed) {
+                    popup.close();
+                    clearInterval(checkClosed);
+                    console.log('⏰ OAuth popup timed out');
+                }
+            }, 60000);
+        } else {
+            throw new Error('Popup blocked by browser');
+        }
+        
+    } catch (error) {
+        console.error('❌ Custom OAuth popup failed:', error);
+        console.log('🎭 Falling back to mock login');
+        mockLogin();
     }
 }
 
