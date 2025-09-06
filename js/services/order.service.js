@@ -297,7 +297,8 @@ export class OrderService {
       // Sync with server if online
       if (this.isOnline) {
         try {
-          const serverOrder = await APIService.put(`/orders/${orderId}`, updatedOrder);
+          const resp = await APIService.updateOrder(orderId, updatedOrder);
+          const serverOrder = resp?.data || updatedOrder;
           this.orders.set(orderId, serverOrder);
           await this.saveCachedOrders();
         } catch (error) {
@@ -351,7 +352,7 @@ export class OrderService {
       // Sync with server if online
       if (this.isOnline) {
         try {
-          await APIService.delete(`/orders/${orderId}`);
+          await APIService.deleteOrder(orderId);
         } catch (error) {
           // Queue for sync later
           this.pendingSync.add({
