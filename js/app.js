@@ -20,7 +20,7 @@ let elements = {};
 document.addEventListener('DOMContentLoaded', () => {
     initializeElements();
     setupEventListeners();
-    checkAuthStatus();
+    initializeAuth();
     updateDateTime();
     
     // Update date/time every minute
@@ -376,55 +376,89 @@ function updateStatistics() {
     elements.monthRevenue.textContent = formatCurrency(monthRevenue, true);
 }
 
-// Check auth status
-function checkAuthStatus() {
-    // For Phase 1, just show main app
-    // In Phase 3, this will check real auth
-    const mockUser = localStorage.getItem('mockUser');
-    
-    if (mockUser) {
-        APP_STATE.user = JSON.parse(mockUser);
+// Initialize authentication
+function initializeAuth() {
+    // Initialize Google Auth
+    if (typeof AUTH !== 'undefined') {
+        AUTH.init({
+            onLoginSuccess: (user) => {
+                console.log('User logged in:', user);
+                APP_STATE.user = user;
+                showMainApp();
+                showToast(`Xin chào ${user.name || user.email}!`, 'success');
+            },
+            onLoginError: (error) => {
+                console.error('Login error:', error);
+                showToast(error, 'error');
+                showLoginScreen();
+            },
+            onLogout: () => {
+                console.log('User logged out');
+                APP_STATE.user = null;
+                showLoginScreen();
+                showToast('Đã đăng xuất', 'info');
+            }
+        });
+    } else {
+        console.warn('AUTH module not loaded, using fallback');
+        checkLocalAuth();
+    }
+}
+
+// Fallback auth check
+function checkLocalAuth() {
+    const user = localStorage.getItem('user');
+    if (user) {
+        APP_STATE.user = JSON.parse(user);
         showMainApp();
     } else {
         showLoginScreen();
     }
 }
 
-// Handle login (mock for Phase 1)
-async function handleLogin() {
-    showLoading(true);
-    
-    try {
-        // Simulate login
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Mock user
-        const user = {
-            email: 'demo@salon.com',
-            name: 'Demo User'
-        };
-        
-        APP_STATE.user = user;
-        localStorage.setItem('mockUser', JSON.stringify(user));
-        
-        showMainApp();
-        showToast('Đăng nhập thành công!', 'success');
-    } catch (error) {
-        console.error('Login error:', error);
-        showToast('Đăng nhập thất bại', 'error');
-    } finally {
-        showLoading(false);
+// Handle login with Google OAuth
+function handleLogin() {
+    if (typeof AUTH !== 'undefined') {
+        AUTH.login();
+    } else {
+        console.warn('AUTH module not available, using mock login');
+        mockLoginFallback();
     }
 }
 
 // Handle logout
 function handleLogout() {
     if (confirm('Bạn có chắc muốn đăng xuất?')) {
-        APP_STATE.user = null;
-        localStorage.removeItem('mockUser');
-        showLoginScreen();
-        showToast('Đã đăng xuất', 'info');
+        if (typeof AUTH !== 'undefined') {
+            AUTH.logout();
+        } else {
+            // Fallback logout
+            APP_STATE.user = null;
+            localStorage.removeItem('user');
+            showLoginScreen();
+            showToast('Đã đăng xuất', 'info');
+        }
     }
+}
+
+// Mock login fallback for development
+function mockLoginFallback() {
+    showLoading(true);
+    
+    setTimeout(() => {
+        const mockUser = {
+            id: 'demo-123',
+            email: 'demo@salon.com',
+            name: 'Demo User',
+            picture: null
+        };
+        
+        APP_STATE.user = mockUser;
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        showMainApp();
+        showToast('Đăng nhập demo thành công!', 'success');
+        showLoading(false);
+    }, 1000);
 }
 
 // Show main app

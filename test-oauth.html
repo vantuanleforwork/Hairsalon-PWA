@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google OAuth 2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">🔐 Test Google OAuth 2.0</h1>
+        
+        <!-- Config Input -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Configuration</h2>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Google Client ID:
+                </label>
+                <input type="text" 
+                       id="clientId" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="123456789-abcdef.apps.googleusercontent.com"
+                       value="">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Allowed Emails (one per line):
+                </label>
+                <textarea id="allowedEmails" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows="4"
+                          placeholder="employee1@gmail.com&#10;employee2@gmail.com&#10;owner@salon.com"></textarea>
+            </div>
+            
+            <button onclick="initOAuth()" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                Initialize OAuth
+            </button>
+        </div>
+        
+        <!-- Login Section -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Login Test</h2>
+            
+            <div id="loginSection">
+                <div id="googleSignInBtn" class="mb-4"></div>
+                <button onclick="promptLogin()" 
+                        class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded mr-2">
+                    🚀 Prompt Login
+                </button>
+                <button onclick="logout()" 
+                        class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                    🚪 Logout
+                </button>
+            </div>
+        </div>
+        
+        <!-- User Info -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6" id="userInfoSection" style="display: none;">
+            <h2 class="text-xl font-semibold mb-4">User Information</h2>
+            <div id="userInfo"></div>
+        </div>
+        
+        <!-- Logs -->
+        <div class="bg-gray-800 text-green-400 rounded-lg shadow p-6 font-mono text-sm">
+            <h2 class="text-xl font-semibold mb-4 text-white">Console Logs</h2>
+            <div id="logs" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let allowedEmails = [];
+        
+        // Custom console log
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: 'text-green-400',
+                warn: 'text-yellow-400', 
+                error: 'text-red-400',
+                success: 'text-blue-400'
+            };
+            
+            logs.innerHTML += `<div class="${colors[type]}">[${timestamp}] ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+            
+            // Also log to real console
+            console.log(`[OAuth Test] ${message}`);
+        }
+        
+        // Initialize OAuth
+        function initOAuth() {
+            const clientId = document.getElementById('clientId').value.trim();
+            const emailsText = document.getElementById('allowedEmails').value.trim();
+            
+            if (!clientId) {
+                log('Error: Missing Client ID', 'error');
+                alert('Please enter Google Client ID');
+                return;
+            }
+            
+            // Parse allowed emails
+            allowedEmails = emailsText.split('\\n').map(email => email.trim()).filter(email => email);
+            log(`Allowed emails: ${allowedEmails.join(', ')}`, 'info');
+            
+            try {
+                // Initialize Google Identity Services
+                google.accounts.id.initialize({
+                    client_id: clientId,
+                    callback: handleCredentialResponse,
+                    auto_select: false,
+                    cancel_on_tap_outside: true
+                });
+                
+                // Render sign-in button
+                google.accounts.id.renderButton(
+                    document.getElementById('googleSignInBtn'), {
+                        type: 'standard',
+                        size: 'large',
+                        text: 'signin_with',
+                        shape: 'rectangular',
+                        logo_alignment: 'left',
+                        theme: 'outline'
+                    }
+                );
+                
+                log('OAuth initialized successfully', 'success');
+                
+                // Save config for next time
+                localStorage.setItem('testClientId', clientId);
+                localStorage.setItem('testAllowedEmails', emailsText);
+                
+            } catch (error) {
+                log(`Error initializing OAuth: ${error.message}`, 'error');
+            }
+        }
+        
+        // Handle credential response
+        function handleCredentialResponse(response) {
+            log('Received credential response', 'info');
+            
+            if (!response || !response.credential) {
+                log('Error: No credential in response', 'error');
+                return;
+            }
+            
+            try {
+                // Parse JWT
+                const token = response.credential;
+                const payload = parseJwt(token);
+                
+                log(`Parsed user: ${payload.email}`, 'info');
+                
+                // Check if email is allowed
+                if (allowedEmails.length > 0 && !allowedEmails.includes(payload.email)) {
+                    log(`Access denied: ${payload.email} not in whitelist`, 'error');
+                    alert(`Email ${payload.email} không được phép truy cập.`);
+                    return;
+                }
+                
+                // Create user object
+                currentUser = {
+                    id: payload.sub,
+                    email: payload.email,
+                    name: payload.name,
+                    picture: payload.picture,
+                    token: token
+                };
+                
+                log(`Login successful: ${currentUser.name} (${currentUser.email})`, 'success');
+                displayUserInfo(currentUser);
+                
+            } catch (error) {
+                log(`Error processing credential: ${error.message}`, 'error');
+            }
+        }
+        
+        // Prompt login
+        function promptLogin() {
+            try {
+                google.accounts.id.prompt((notification) => {
+                    if (notification.isNotDisplayed()) {
+                        log('Login prompt not displayed', 'warn');
+                    } else if (notification.isSkippedMoment()) {
+                        log('Login prompt skipped', 'warn');
+                    } else {
+                        log('Login prompt shown', 'info');
+                    }
+                });
+            } catch (error) {
+                log(`Error showing login prompt: ${error.message}`, 'error');
+            }
+        }
+        
+        // Logout
+        function logout() {
+            if (currentUser) {
+                log(`Logging out: ${currentUser.email}`, 'info');
+                currentUser = null;
+                document.getElementById('userInfoSection').style.display = 'none';
+                
+                // Disable auto-select
+                if (typeof google !== 'undefined') {
+                    google.accounts.id.disableAutoSelect();
+                }
+                
+                log('Logged out successfully', 'success');
+            } else {
+                log('No user to logout', 'warn');
+            }
+        }
+        
+        // Display user info
+        function displayUserInfo(user) {
+            const userInfoDiv = document.getElementById('userInfo');
+            userInfoDiv.innerHTML = `
+                <div class="flex items-center space-x-4 mb-4">
+                    <img src="${user.picture || 'https://via.placeholder.com/64'}" 
+                         alt="Avatar" 
+                         class="w-16 h-16 rounded-full">
+                    <div>
+                        <h3 class="text-lg font-semibold">${user.name}</h3>
+                        <p class="text-gray-600">${user.email}</p>
+                        <p class="text-sm text-gray-500">ID: ${user.id}</p>
+                    </div>
+                </div>
+                <div class="bg-gray-100 p-3 rounded">
+                    <h4 class="font-semibold mb-2">JWT Token (first 50 chars):</h4>
+                    <p class="text-xs font-mono break-all">${user.token.substring(0, 50)}...</p>
+                </div>
+            `;
+            document.getElementById('userInfoSection').style.display = 'block';
+        }
+        
+        // Parse JWT token
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (error) {
+                throw new Error(`Error parsing JWT: ${error.message}`);
+            }
+        }
+        
+        // Load saved config
+        window.onload = function() {
+            const savedClientId = localStorage.getItem('testClientId');
+            const savedEmails = localStorage.getItem('testAllowedEmails');
+            
+            if (savedClientId) {
+                document.getElementById('clientId').value = savedClientId;
+            }
+            
+            if (savedEmails) {
+                document.getElementById('allowedEmails').value = savedEmails;
+            }
+            
+            log('OAuth test page loaded', 'info');
+        };
+    </script>
+</body>
+</html>
