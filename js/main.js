@@ -213,6 +213,10 @@ export class HairSalonApp {
     } catch (error) {
       console.warn('Auth initialization failed:', error);
       // Continue without auth - will redirect to login when needed
+    } finally {
+      // Ensure initial loader from index.html is hidden in any case
+      const initialLoader = document.getElementById('loading-screen');
+      if (initialLoader) initialLoader.classList.add('hidden');
     }
   }
 
