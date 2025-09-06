@@ -1,62 +1,87 @@
 # 💇‍♀️ Salon Manager PWA
 
-Web app PWA đơn giản để quản lý đơn hàng cho salon tóc nhỏ, hoạt động hoàn toàn trên GitHub Pages.
+Web app PWA hoàn chỉnh để quản lý đơn hàng cho salon tóc nhỏ, với Google OAuth, backend API, search/filter và export data.
 
-## 🚀 Demo
+## 🚀 Current Status: Phase 4 Complete! 🎉
 
-Bạn có thể test ngay bằng cách mở file `index.html` trong trình duyệt hoặc sử dụng Live Server trong VS Code.
+**Phase 1: Frontend UI** ✅ COMPLETE  
+**Phase 2: Backend API** ✅ COMPLETE  
+**Phase 3: OAuth Integration** ✅ COMPLETE  
+**Phase 4: Frontend-Backend Integration** ✅ COMPLETE 🎆  
+**Phase 5: PWA Features** 🔄 NEXT  
+**Phase 6: Testing & Deployment** ⏳ PLANNED
 
-## ✨ Tính năng
+## 🌟 Tính năng hoàn chỉnh
 
-### Đã hoàn thành (Phase 1)
-- ✅ Giao diện mobile-first responsive
-- ✅ Form nhập đơn hàng đơn giản như Google Form
-- ✅ Thống kê: Số đơn ngày, Doanh thu ngày, Doanh thu tháng
-- ✅ Danh sách đơn hàng trong ngày
-- ✅ Xóa đơn hàng với xác nhận
-- ✅ Lưu dữ liệu local (localStorage)
-- ✅ Mock authentication để test
+### ✅ Phase 1: UI/UX Foundation
+- 📱 Mobile-first responsive design
+- 🎨 Form nhập đơn hàng đẹp như Google Form
+- 📊 Dashboard với thống kê real-time
+- 📋 Danh sách đơn hàng interactive
+- 🗑️ Xóa đơn hàng với confirmation
+- 💾 LocalStorage fallback
 
-### Đã hoàn thành (Phase 2)
-- ✅ Google Sheets integration
-- ✅ Google Apps Script API backend
-- ✅ CRUD operations (Create, Read, Update, Delete)
-- ✅ Real-time statistics from Sheets
-- ✅ API test tool
+### ✅ Phase 2: Backend Infrastructure
+- 🗃️ Google Sheets database integration
+- ⚡ Google Apps Script API endpoints
+- 🔄 CRUD operations (Create, Read, Update, Delete)
+- 📈 Real-time statistics calculation
+- 🧪 Comprehensive API testing tools
 
-### Sắp tới
-- ⏳ Google OAuth authentication (Phase 3)
-- ⏳ Tích hợp Frontend với Backend (Phase 4)
-- ⏳ PWA với offline support (Phase 5)
-- ⏳ Deploy lên GitHub Pages (Phase 6)
+### ✅ Phase 3: Authentication
+- 🔐 Google OAuth 2.0 integration
+- 👥 Email whitelist security
+- 🎟️ JWT token management
+- 🔄 Session persistence
+- 📱 Mobile OAuth support
 
-## 📱 Sử dụng
+### ✅ Phase 4: Full Integration
+- 🔗 Frontend-Backend full integration
+- 🔍 Advanced search & filter system
+- 📊 Real-time statistics sync
+- 🛠️ Comprehensive testing suite
 
-### Test ngay (Phase 1)
+### 🔮 Phase 5: PWA Features (Next)
+- 📱 Service Worker
+- 📴 Offline support
+- 🔄 Background sync
+- 📲 App installation prompt
+
+## 🎮 Sử dụng
+
+### 🚀 Quick Start
 1. Mở `index.html` trong trình duyệt
-2. Click "Đăng nhập với Google" (mock login)
+2. Đăng nhập bằng Google OAuth (hoặc fallback demo)
 3. Nhập đơn hàng mới:
-   - Chọn dịch vụ
-   - Nhập giá tiền
-   - Thêm ghi chú (tùy chọn)
+   - Chọn dịch vụ từ grid buttons
+   - Nhập giá tiền (nghìn đồng)
+   - Thêm ghi chú nếu cần
    - Click "Lưu đơn hàng"
-4. Xem danh sách và thống kê được cập nhật tự động
+4. Sử dụng tính năng nâng cao:
+   - 🔍 Tìm kiếm và lọc đơn hàng
+   - 📊 Xem thống kê real-time
 
-### Cấu trúc project
+### 🧠 Testing Tools
+- `test-api.html` - Test Google Apps Script API
+- `test-oauth.html` - Test Google OAuth flow  
+- `test-full-flow.html` - Test toàn bộ tính năng
+
+### 🏠 Cấu trúc project
 ```
 Hairsalon-PWA/
-├── index.html              # File HTML chính
-├── css/
-│   └── styles.css         # Custom styles
+├── index.html                  # Main app
+├── manifest.json              # PWA manifest
 ├── js/
-│   ├── app.js            # Logic chính
-│   ├── auth.js           # Authentication (Phase 3)
-│   ├── api.js            # API calls (Phase 4)
-│   └── utils.js          # Utility functions
-├── icons/                 # PWA icons
-├── config.js             # App configuration
-├── config.example.js     # Template config
-└── README.md            # Documentation
+│   ├── app.js                # Main app logic
+│   ├── auth.js               # OAuth authentication
+│   ├── api.js                # API integration
+│   ├── search.js             # Search & filter
+│   └── utils.js              # Utilities
+├── google-apps-script/        # Backend code
+│   └── Code.gs               # Apps Script API
+├── test-*.html                # Testing tools
+├── config.js                  # App configuration
+└── icons/                     # PWA icons
 ```
 
 ## 🛠️ Tech Stack
@@ -144,6 +169,20 @@ MIT License - Free to use and modify
 
 Salon Manager PWA Team
 
+## 📚 Tài liệu chi tiết
+
+- [`PHASE4_SUMMARY.md`](PHASE4_SUMMARY.md) - Tổng hợp Phase 4
+- [`SETUP_GUIDE.md`](SETUP_GUIDE.md) - Hướng dẫn thiết lập
+- [`API_SETUP.md`](API_SETUP.md) - Cài đặt Google Apps Script
+- [`OAUTH_SETUP.md`](OAUTH_SETUP.md) - Cài đặt Google OAuth
+
 ---
 
-**Version 1.0.0** - Phase 1 Complete 🎉
+**Version 4.0.0** - Phase 4 Complete! 🚀🎆
+
+**Tính năng mới trong Phase 4:**
+- 🔗 Full frontend-backend integration
+- 🔍 Advanced search & filter system  
+- 📊 Real-time API statistics sync
+- 🛠️ Comprehensive testing suite
+- 📱 Enhanced mobile experience

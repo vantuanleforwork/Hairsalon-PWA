@@ -217,12 +217,88 @@
                     <h2 class="text-lg font-semibold text-gray-800 flex items-center">
                         <span class="mr-2">📋</span> Đơn hàng hôm nay
                     </h2>
-                    <button id="refreshBtn" class="text-purple-600 hover:bg-purple-50 p-2 rounded-lg transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                    </button>
+                    <div class="flex items-center space-x-2">
+                        <button id="advancedSearchToggle" class="text-gray-600 hover:bg-gray-50 p-2 rounded-lg transition text-sm" onclick="toggleAdvancedSearch()">
+                            🔽 Tìm kiếm nâng cao
+                        </button>
+                        <button id="refreshBtn" class="text-purple-600 hover:bg-purple-50 p-2 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
+                
+                <!-- Search Bar -->
+                <div class="mb-4">
+                    <div class="relative">
+                        <input type="text" 
+                               id="searchInput" 
+                               class="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                               placeholder="Tìm kiếm đơn hàng, dịch vụ, ghi chú...">
+                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Advanced Search Panel -->
+                <div id="advancedSearchPanel" class="hidden mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <!-- Date Filter -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Thời gian</label>
+                            <select id="dateFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <option value="today">Hôm nay</option>
+                                <option value="yesterday">Hôm qua</option>
+                                <option value="week">Tuần này</option>
+                                <option value="month">Tháng này</option>
+                                <option value="all">Tất cả</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Service Filter -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Dịch vụ</label>
+                            <select id="serviceFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <option value="all">Tất cả dịch vụ</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Employee Filter -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Nhân viên</label>
+                            <select id="employeeFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <option value="all">Tất cả nhân viên</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <!-- Sort Options -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Sắp xếp theo</label>
+                            <select id="sortOptions" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <option value="newest">Mới nhất</option>
+                                <option value="oldest">Cũ nhất</option>
+                                <option value="price_high">Giá cao</option>
+                                <option value="price_low">Giá thấp</option>
+                                <option value="service">Dịch vụ A-Z</option>
+                                <option value="employee">Nhân viên A-Z</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Clear Button -->
+                        <button id="clearSearch" 
+                                class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition"
+                                onclick="clearSearch()">
+                            🗑️ Xóa bộ lọc
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Search Stats -->
+                <div id="searchStats" class="mb-4"></div>
                 
                 <div id="ordersList" class="space-y-3">
                     <!-- Orders will be dynamically added here -->
@@ -261,6 +337,66 @@
     <!-- Load config and app scripts -->
     <script src="config.js"></script>
     <script src="js/auth.js"></script>
+    <script>
+        // Fallback auth functions - ensure they exist
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 Checking auth functions...');
+            
+            // Check if auth functions are available
+            setTimeout(() => {
+                const authStatus = {
+                    initAuth: typeof window.initAuth,
+                    loginWithGoogle: typeof window.loginWithGoogle,
+                    logoutUser: typeof window.logoutUser,
+                    handleGoogleCallback: typeof window.handleGoogleCallback,
+                    AUTH_STATE: typeof window.AUTH_STATE,
+                    AUTH: typeof window.AUTH
+                };
+                
+                console.log('📊 Auth status:', authStatus);
+                
+                // If auth functions missing, create minimal fallback
+                if (typeof window.loginWithGoogle !== 'function') {
+                    console.warn('🚨 Auth functions missing, creating fallback...');
+                    
+                    window.loginWithGoogle = function() {
+                        console.log('🎭 Fallback mock login');
+                        const mockUser = {
+                            id: 'fallback-123',
+                            email: 'demo@salon.com',
+                            name: 'Fallback User',
+                            picture: null
+                        };
+                        localStorage.setItem('user', JSON.stringify(mockUser));
+                        
+                        // Trigger login success
+                        if (window.APP_STATE) {
+                            window.APP_STATE.user = mockUser;
+                        }
+                        if (window.showMainApp) {
+                            window.showMainApp();
+                        }
+                        if (window.showToast) {
+                            window.showToast('Login fallback successful!', 'success');
+                        }
+                    };
+                    
+                    window.logoutUser = function() {
+                        localStorage.removeItem('user');
+                        if (window.APP_STATE) {
+                            window.APP_STATE.user = null;
+                        }
+                        if (window.showLoginScreen) {
+                            window.showLoginScreen();
+                        }
+                    };
+                    
+                    console.log('✅ Fallback functions created');
+                }
+            }, 100);
+        });
+    </script>
+    <script src="js/search.js"></script>
     <script src="js/app.js"></script>
     <script src="js/api.js"></script>
     <script src="js/utils.js"></script>

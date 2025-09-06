@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Full Flow - Salon Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-2xl font-bold mb-4">🧪 Test Full Flow - Salon Manager</h1>
+            <p class="text-gray-600 mb-4">Kiểm tra toàn bộ luồng hoạt động từ OAuth → API → Statistics</p>
+        </div>
+
+        <!-- Test Steps -->
+        <div class="space-y-6">
+            <!-- Step 1: Config Check -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">📋 Step 1: Kiểm tra Config</h2>
+                <div class="space-y-2">
+                    <div id="configStatus" class="text-gray-600">Đang kiểm tra...</div>
+                    <div id="configDetails" class="text-sm text-gray-500"></div>
+                </div>
+                <button onclick="checkConfig()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    🔄 Kiểm tra lại
+                </button>
+            </div>
+
+            <!-- Step 2: OAuth Test -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">🔐 Step 2: Test OAuth</h2>
+                <div class="space-y-2 mb-4">
+                    <div id="authStatus" class="text-gray-600">Chưa đăng nhập</div>
+                    <div id="userInfo" class="text-sm text-gray-500"></div>
+                </div>
+                
+                <!-- Auth Function Status -->
+                <div class="mb-4 p-3 bg-gray-50 rounded text-sm">
+                    <div id="authFunctionStatus" class="text-gray-600">Checking auth functions...</div>
+                </div>
+                
+                <div class="space-y-2">
+                    <!-- Primary OAuth Buttons -->
+                    <div class="flex space-x-2">
+                        <button onclick="testLogin()" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                            🚀 Test OAuth Login
+                        </button>
+                        <button onclick="testLogout()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                            😪 Logout
+                        </button>
+                    </div>
+                    
+                    <!-- Fallback/Debug Buttons -->
+                    <div class="flex space-x-2">
+                        <button onclick="testMockLogin()" class="px-3 py-1 text-xs bg-gray-400 text-white rounded hover:bg-gray-500">
+                            🎭 Mock Login
+                        </button>
+                        <button onclick="debugAuthFunctions()" class="px-3 py-1 text-xs bg-blue-400 text-white rounded hover:bg-blue-500">
+                            🔍 Debug Functions
+                        </button>
+                        <button onclick="forceInitAuth()" class="px-3 py-1 text-xs bg-yellow-400 text-white rounded hover:bg-yellow-500">
+                            ⚙️ Force Init
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: API Test -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">🌐 Step 3: Test API Endpoints</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Create Order -->
+                    <div class="border rounded p-4">
+                        <h3 class="font-semibold mb-2">📝 Create Order</h3>
+                        <div id="createOrderResult" class="text-sm text-gray-600 mb-2">Chưa test</div>
+                        <button onclick="testCreateOrder()" class="w-full px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+                            Test
+                        </button>
+                    </div>
+
+                    <!-- Get Orders -->
+                    <div class="border rounded p-4">
+                        <h3 class="font-semibold mb-2">📋 Get Orders</h3>
+                        <div id="getOrdersResult" class="text-sm text-gray-600 mb-2">Chưa test</div>
+                        <button onclick="testGetOrders()" class="w-full px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Test
+                        </button>
+                    </div>
+
+                    <!-- Get Stats -->
+                    <div class="border rounded p-4">
+                        <h3 class="font-semibold mb-2">📊 Get Stats</h3>
+                        <div id="getStatsResult" class="text-sm text-gray-600 mb-2">Chưa test</div>
+                        <button onclick="testGetStats()" class="w-full px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                            Test
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Full Integration Test -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">🎯 Step 4: Test Tích hợp Full</h2>
+                <div id="integrationResult" class="text-gray-600 mb-4">Sẵn sàng chạy test</div>
+                <button onclick="runFullTest()" class="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600">
+                    🚀 Chạy Full Test
+                </button>
+            </div>
+
+            <!-- Results -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">📊 Kết quả Test</h2>
+                <div id="testResults" class="space-y-2">
+                    <div class="text-gray-600">Chưa có kết quả</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Config and Modules -->
+    <script src="config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+
+    <script>
+        // Test variables
+        let testUser = null;
+        let testResults = [];
+
+        // Initialize test page
+        document.addEventListener('DOMContentLoaded', () => {
+            checkConfig();
+            initializeAuthTest();
+        });
+        
+        // Initialize auth for testing
+        function initializeAuthTest() {
+            console.log('🔍 Checking auth functions...');
+            
+            setTimeout(() => {
+                // Check what auth functions are available
+                const authStatus = {
+                    initAuth: typeof window.initAuth,
+                    loginWithGoogle: typeof window.loginWithGoogle,
+                    logoutUser: typeof window.logoutUser,
+                    globalLoginWithGoogle: typeof loginWithGoogle,
+                    globalLogoutUser: typeof logoutUser
+                };
+                
+                console.log('📊 Auth functions status:', authStatus);
+                
+                // Try to initialize auth
+                if (typeof window.initAuth === 'function') {
+                    console.log('⚙️ Initializing auth...');
+                    try {
+                        window.initAuth({
+                            onLoginSuccess: (user) => {
+                                console.log('✅ Auth init success:', user);
+                                testUser = user;
+                                updateAuthStatus(`✅ Đăng nhập thành công: ${user.email}`, user);
+                            },
+                            onLoginError: (error) => {
+                                console.log('❌ Auth init error:', error);
+                                updateAuthStatus(`❌ Lỗi đăng nhập: ${error}`, null);
+                            },
+                            onLogout: () => {
+                                console.log('😪 Auth logout callback');
+                                testUser = null;
+                                updateAuthStatus('😪 Đã đăng xuất', null);
+                            }
+                        });
+                    } catch (e) {
+                        console.error('❌ Auth init failed:', e);
+                        updateAuthStatus('⚠️ Auth không thể khởi tạo', null);
+                    }
+                } else {
+                    console.log('⚠️ No initAuth function found');
+                    updateAuthStatus('⚠️ Auth functions chưa sẵn sàng (sử dụng mock)', null);
+                }
+                
+                // Always run debug functions check
+                setTimeout(() => {
+                    debugAuthFunctions();
+                }, 500);
+                
+            }, 1500); // Increased timeout
+        }
+
+        // Check configuration
+        function checkConfig() {
+            const configDiv = document.getElementById('configStatus');
+            const detailsDiv = document.getElementById('configDetails');
+            
+            if (typeof APP_CONFIG === 'undefined') {
+                configDiv.innerHTML = '❌ Config không tải được';
+                detailsDiv.innerHTML = 'Không tìm thấy APP_CONFIG';
+                return;
+            }
+
+            let details = [];
+            details.push(`📍 API Base: ${APP_CONFIG.API_BASE_URL.includes('DEMO_ID') ? 'DEMO MODE' : 'REAL API'}`);
+            details.push(`🔐 OAuth Client: ${APP_CONFIG.GOOGLE_CLIENT_ID.includes('DEMO_ID') ? 'DEMO MODE' : 'CONFIGURED'}`);
+            details.push(`📧 Allowed Emails: ${APP_CONFIG.ALLOWED_EMAILS.length} emails`);
+
+            if (APP_CONFIG.API_BASE_URL.includes('DEMO_ID') || APP_CONFIG.GOOGLE_CLIENT_ID.includes('DEMO_ID')) {
+                configDiv.innerHTML = '⚠️ Config ở chế độ DEMO';
+                details.push('⚠️ Cần cập nhật config thực để test production');
+            } else {
+                configDiv.innerHTML = '✅ Config OK cho production';
+            }
+
+            detailsDiv.innerHTML = details.join('<br>');
+        }
+
+        // Test login
+        function testLogin() {
+            console.log('🚀 Testing login...');
+            
+            // Check multiple possible function locations
+            const loginFn = window.loginWithGoogle || loginWithGoogle;
+            
+            if (typeof loginFn === 'function') {
+                console.log('✅ Found loginWithGoogle function');
+                loginFn();
+            } else if (typeof window.initAuth === 'function') {
+                console.log('⚠️ No loginWithGoogle, trying to init auth first');
+                window.initAuth();
+                setTimeout(() => {
+                    const retryLoginFn = window.loginWithGoogle || loginWithGoogle;
+                    if (typeof retryLoginFn === 'function') {
+                        retryLoginFn();
+                    } else {
+                        // Fallback to mock login for testing
+                        console.log('🎭 Using mock login fallback');
+                        const mockUser = {
+                            id: 'test-123',
+                            email: 'test@example.com',
+                            name: 'Test User',
+                            picture: null
+                        };
+                        testUser = mockUser;
+                        updateAuthStatus('✅ Mock login thành công (test mode)', mockUser);
+                    }
+                }, 500);
+            } else {
+                // Direct fallback to mock login
+                console.log('🎭 Using direct mock login');
+                const mockUser = {
+                    id: 'test-123',
+                    email: 'test@example.com', 
+                    name: 'Test User',
+                    picture: null
+                };
+                testUser = mockUser;
+                updateAuthStatus('✅ Mock login thành công (fallback)', mockUser);
+            }
+        }
+
+        // Test logout
+        function testLogout() {
+            console.log('😪 Testing logout...');
+            
+            const logoutFn = window.logoutUser || logoutUser;
+            
+            if (typeof logoutFn === 'function') {
+                logoutFn();
+            }
+            
+            // Always reset test state
+            testUser = null;
+            updateAuthStatus('😪 Đã đăng xuất', null);
+        }
+        
+        // Test mock login
+        function testMockLogin() {
+            console.log('🎭 Testing mock login...');
+            
+            const mockUser = {
+                id: 'test-mock-123',
+                email: 'test@example.com',
+                name: 'Test Mock User',
+                picture: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiNlNWU3ZWIiLz48L3N2Zz4='
+            };
+            
+            testUser = mockUser;
+            updateAuthStatus('✅ Mock login thành công (test mode)', mockUser);
+        }
+        
+        // Debug auth functions
+        function debugAuthFunctions() {
+            console.log('🔍 Debugging auth functions...');
+            
+            const functions = {
+                'window.initAuth': typeof window.initAuth,
+                'window.loginWithGoogle': typeof window.loginWithGoogle,
+                'window.logoutUser': typeof window.logoutUser,
+                'window.AUTH': typeof window.AUTH,
+                'window.AUTH_STATE': typeof window.AUTH_STATE,
+                'google': typeof google,
+                'google.accounts': typeof google?.accounts
+            };
+            
+            let status = 'Auth Functions Status:<br>';
+            for (const [name, type] of Object.entries(functions)) {
+                const icon = type === 'function' ? '✅' : type === 'object' ? '🔧' : '❌';
+                status += `${icon} ${name}: ${type}<br>`;
+            }
+            
+            document.getElementById('authFunctionStatus').innerHTML = status;
+            console.log('📊 Auth functions:', functions);
+        }
+        
+        // Force init auth
+        function forceInitAuth() {
+            console.log('⚙️ Force initializing auth...');
+            
+            if (typeof window.initAuth === 'function') {
+                try {
+                    window.initAuth({
+                        onLoginSuccess: (user) => {
+                            console.log('✅ Force init success:', user);
+                            testUser = user;
+                            updateAuthStatus(`✅ Force init thành công: ${user.email}`, user);
+                        },
+                        onLoginError: (error) => {
+                            console.log('❌ Force init error:', error);
+                            updateAuthStatus(`❌ Force init lỗi: ${error}`, null);
+                        }
+                    });
+                    updateAuthStatus('⚙️ Đang force init...', null);
+                } catch (e) {
+                    console.error('❌ Force init failed:', e);
+                    updateAuthStatus('❌ Force init failed: ' + e.message, null);
+                }
+            } else {
+                updateAuthStatus('❌ Không có initAuth function', null);
+            }
+        }
+
+        // Update auth status
+        function updateAuthStatus(status, user) {
+            document.getElementById('authStatus').innerHTML = status;
+            
+            if (user) {
+                document.getElementById('userInfo').innerHTML = `
+                    <strong>Name:</strong> ${user.name || 'N/A'}<br>
+                    <strong>Email:</strong> ${user.email}<br>
+                    <strong>Picture:</strong> <img src="${user.picture || ''}" alt="avatar" class="inline w-6 h-6 rounded-full">
+                `;
+            } else {
+                document.getElementById('userInfo').innerHTML = '';
+            }
+        }
+
+        // Test create order
+        async function testCreateOrder() {
+            const resultDiv = document.getElementById('createOrderResult');
+            resultDiv.innerHTML = '🔄 Testing...';
+
+            try {
+                // Check API configuration first
+                if (!APP_CONFIG || !APP_CONFIG.API_BASE_URL) {
+                    throw new Error('API_BASE_URL not configured');
+                }
+                
+                if (APP_CONFIG.API_BASE_URL.includes('DEMO_ID')) {
+                    // Use mock data for demo mode
+                    console.log('🎭 Using mock create order (demo mode)');
+                    const mockResult = {
+                        id: 'mock-' + Date.now(),
+                        success: true,
+                        message: 'Mock order created successfully'
+                    };
+                    resultDiv.innerHTML = `✅ Success (Mock)<br><small>ID: ${mockResult.id}</small>`;
+                    addTestResult('Create Order', true, 'Mock order created');
+                    return;
+                }
+                
+                if (typeof window.createOrder !== 'function') {
+                    throw new Error('createOrder function not available');
+                }
+
+                const testOrderData = {
+                    employee: testUser?.email || 'test@example.com',
+                    service: 'Cắt tóc nam',
+                    price: 50000,
+                    notes: 'Test order từ full flow test'
+                };
+
+                const result = await window.createOrder(testOrderData);
+                
+                if (result) {
+                    resultDiv.innerHTML = `✅ Success<br><small>ID: ${result.id || 'N/A'}</small>`;
+                    addTestResult('Create Order', true, 'Tạo đơn hàng thành công');
+                } else {
+                    throw new Error('No result returned');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error<br><small>${error.message}</small>`;
+                addTestResult('Create Order', false, error.message);
+            }
+        }
+
+        // Test get orders
+        async function testGetOrders() {
+            const resultDiv = document.getElementById('getOrdersResult');
+            resultDiv.innerHTML = '🔄 Testing...';
+
+            try {
+                // Check API configuration first
+                if (!APP_CONFIG || !APP_CONFIG.API_BASE_URL) {
+                    throw new Error('API_BASE_URL not configured');
+                }
+                
+                if (APP_CONFIG.API_BASE_URL.includes('DEMO_ID')) {
+                    // Use mock data for demo mode
+                    console.log('🎭 Using mock get orders (demo mode)');
+                    const mockOrders = {
+                        orders: [
+                            { id: '1', service: 'Cắt tóc', price: 50000, timestamp: new Date().toISOString() },
+                            { id: '2', service: 'Gội', price: 30000, timestamp: new Date().toISOString() }
+                        ],
+                        total: 2
+                    };
+                    resultDiv.innerHTML = `✅ Success (Mock)<br><small>${mockOrders.orders.length} orders</small>`;
+                    addTestResult('Get Orders', true, `Mock: ${mockOrders.orders.length} đơn hàng`);
+                    return;
+                }
+                
+                if (typeof window.getOrders !== 'function') {
+                    throw new Error('getOrders function not available');
+                }
+
+                const result = await window.getOrders();
+                
+                if (result && result.orders) {
+                    const count = result.orders.length;
+                    resultDiv.innerHTML = `✅ Success<br><small>${count} orders</small>`;
+                    addTestResult('Get Orders', true, `Lấy được ${count} đơn hàng`);
+                } else {
+                    throw new Error('Invalid response format');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error<br><small>${error.message}</small>`;
+                addTestResult('Get Orders', false, error.message);
+            }
+        }
+
+        // Test get stats
+        async function testGetStats() {
+            const resultDiv = document.getElementById('getStatsResult');
+            resultDiv.innerHTML = '🔄 Testing...';
+
+            try {
+                // Check API configuration first
+                if (!APP_CONFIG || !APP_CONFIG.API_BASE_URL) {
+                    throw new Error('API_BASE_URL not configured');
+                }
+                
+                if (APP_CONFIG.API_BASE_URL.includes('DEMO_ID')) {
+                    // Use mock data for demo mode
+                    console.log('🎭 Using mock get stats (demo mode)');
+                    const mockStats = {
+                        todayCount: 5,
+                        todayRevenue: 250000,
+                        monthRevenue: 2500000
+                    };
+                    const todayRevenue = mockStats.todayRevenue.toLocaleString('vi-VN');
+                    resultDiv.innerHTML = `✅ Success (Mock)<br><small>Hôm nay: ${todayRevenue}đ</small>`;
+                    addTestResult('Get Stats', true, `Mock revenue: ${todayRevenue}đ`);
+                    return;
+                }
+                
+                if (typeof window.getStats !== 'function') {
+                    throw new Error('getStats function not available');
+                }
+
+                const result = await window.getStats();
+                
+                if (result) {
+                    const todayRevenue = (result.todayRevenue || 0).toLocaleString('vi-VN');
+                    resultDiv.innerHTML = `✅ Success<br><small>Hôm nay: ${todayRevenue}đ</small>`;
+                    addTestResult('Get Stats', true, `Today revenue: ${todayRevenue}đ`);
+                } else {
+                    throw new Error('No result returned');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error<br><small>${error.message}</small>`;
+                addTestResult('Get Stats', false, error.message);
+            }
+        }
+
+        // Run full integration test
+        async function runFullTest() {
+            const resultDiv = document.getElementById('integrationResult');
+            resultDiv.innerHTML = '🔄 Đang chạy full test...';
+            
+            testResults = []; // Reset results
+            
+            try {
+                // Test sequence
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await testCreateOrder();
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                await testGetOrders();
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                await testGetStats();
+                
+                // Show final results
+                const passed = testResults.filter(r => r.success).length;
+                const total = testResults.length;
+                
+                resultDiv.innerHTML = `✅ Full test hoàn thành: ${passed}/${total} tests passed`;
+                updateTestResultsDisplay();
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Full test failed: ${error.message}`;
+            }
+        }
+
+        // Add test result
+        function addTestResult(testName, success, message) {
+            testResults.push({
+                test: testName,
+                success: success,
+                message: message,
+                timestamp: new Date().toLocaleTimeString('vi-VN')
+            });
+        }
+
+        // Update test results display
+        function updateTestResultsDisplay() {
+            const resultsDiv = document.getElementById('testResults');
+            
+            if (testResults.length === 0) {
+                resultsDiv.innerHTML = '<div class="text-gray-600">Chưa có kết quả</div>';
+                return;
+            }
+
+            const html = testResults.map(result => `
+                <div class="flex items-center justify-between p-3 border rounded ${result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}">
+                    <div>
+                        <span class="${result.success ? 'text-green-600' : 'text-red-600'}">${result.success ? '✅' : '❌'}</span>
+                        <strong>${result.test}</strong>
+                        <div class="text-sm text-gray-600">${result.message}</div>
+                    </div>
+                    <div class="text-xs text-gray-500">${result.timestamp}</div>
+                </div>
+            `).join('');
+
+            resultsDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

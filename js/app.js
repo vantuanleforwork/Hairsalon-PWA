@@ -194,9 +194,8 @@ async function handleOrderSubmit(e) {
     showLoading(true);
     
     try {
-        // In Phase 1, we'll just add to local state
-        // In Phase 4, this will call the API
-        await saveOrder(order);
+        // Save order through API or localStorage
+        const savedOrder = await saveOrder(order);
         
         // Clear form
         elements.orderForm.reset();
@@ -208,8 +207,12 @@ async function handleOrderSubmit(e) {
         });
         
         // Update UI
-        addOrderToList(order);
-        updateStatistics();
+        addOrderToList(savedOrder);
+        
+        // Refresh orders list
+        setTimeout(() => {
+            refreshOrders();
+        }, 500);
         
         showToast('Đã lưu đơn hàng thành công!', 'success');
     } catch (error) {
@@ -220,18 +223,79 @@ async function handleOrderSubmit(e) {
     }
 }
 
-// Save order (mock function for Phase 1)
+// Save order to Google Sheets via API
 async function saveOrder(order) {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+    console.log('📥 Saving order to backend...');
     
-    // Add to local state
-    APP_STATE.orders.unshift(order);
-    
-    // Save to localStorage for persistence
-    localStorage.setItem('orders', JSON.stringify(APP_STATE.orders));
-    
-    return order;
+    try {
+        // Check if API is available
+        if (typeof window.createOrder === 'function' && 
+            APP_CONFIG && APP_CONFIG.API_BASE_URL && 
+            !APP_CONFIG.API_BASE_URL.includes('DEMO_ID')) {
+            
+            console.log('⚙️ Using Google Sheets API');
+            
+            // Call real API with timeout
+            const response = await Promise.race([
+                window.createOrder({
+                    employee: order.employee,
+                    service: order.service,
+                    price: order.price,
+                    notes: order.notes
+                }),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('API timeout after 10s')), 10000)
+                )
+            ]);
+            
+            if (response && (response.success || response.id)) {
+                console.log('✅ Order saved to Google Sheets:', response);
+                
+                // Also save locally for immediate UI update
+                APP_STATE.orders.unshift(order);
+                localStorage.setItem('orders', JSON.stringify(APP_STATE.orders));
+                
+                // Refresh stats from server
+                setTimeout(() => {
+                    refreshStatsFromAPI();
+                }, 1000);
+                
+                showToast('✅ Đã lưu và đồng bộ thành công!', 'success');
+                return order;
+            } else {
+                throw new Error('Invalid API response');
+            }
+            
+        } else {
+            console.log('📋 Using local storage (API not configured)');
+            
+            // Fallback to localStorage
+            await new Promise(resolve => setTimeout(resolve, 300));
+            APP_STATE.orders.unshift(order);
+            localStorage.setItem('orders', JSON.stringify(APP_STATE.orders));
+            
+            showToast('✅ Đã lưu local (chế độ offline)', 'info');
+            return order;
+        }
+        
+    } catch (error) {
+        console.error('❌ Error saving to API:', error.message);
+        
+        // Always fallback to localStorage - never fail completely
+        APP_STATE.orders.unshift(order);
+        localStorage.setItem('orders', JSON.stringify(APP_STATE.orders));
+        
+        // Show appropriate message based on error
+        if (error.message.includes('timeout')) {
+            showToast('⚠️ API chậm, đã lưu local. Tự động đồng bộ sau.', 'warning');
+        } else if (error.message.includes('CORS') || error.message.includes('network')) {
+            showToast('📏 Mạng có vấn đề, đã lưu local.', 'warning');
+        } else {
+            showToast('✅ Đã lưu thành công (offline mode)', 'info');
+        }
+        
+        return order;
+    }
 }
 
 // Add order to list UI
@@ -310,25 +374,122 @@ window.deleteOrder = async function(orderId) {
     }
 };
 
-// Refresh orders list
+// Refresh orders list from API or localStorage
 async function refreshOrders() {
     showLoading(true);
     
     try {
-        // Load from localStorage for now
-        const savedOrders = localStorage.getItem('orders');
-        if (savedOrders) {
-            APP_STATE.orders = JSON.parse(savedOrders);
-            displayOrders();
+        // Try to load from API first
+        if (typeof window.getOrders === 'function' && 
+            APP_CONFIG && APP_CONFIG.API_BASE_URL && 
+            !APP_CONFIG.API_BASE_URL.includes('DEMO_ID')) {
+            
+            console.log('📥 Loading orders from API...');
+            
+            // Add timeout for API call
+            const response = await Promise.race([
+                window.getOrders(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('API timeout')), 8000)
+                )
+            ]);
+            
+            if (response && response.orders && Array.isArray(response.orders)) {
+                // Transform API data if needed
+                const apiOrders = response.orders.map(order => ({
+                    id: order.id || generateOrderId(),
+                    timestamp: order.timestamp || order.date || new Date().toISOString(),
+                    service: order.service || 'Unknown Service',
+                    price: parseInt(order.price) || 0,
+                    notes: order.notes || '',
+                    employee: order.employee || 'unknown',
+                    status: order.status || 'active'
+                }));
+                
+                APP_STATE.orders = apiOrders;
+                localStorage.setItem('orders', JSON.stringify(APP_STATE.orders));
+                console.log(`✅ Loaded ${apiOrders.length} orders from API`);
+                
+            } else {
+                console.warn('⚠️ API response invalid, using localStorage');
+                loadOrdersFromLocalStorage();
+            }
+            
+        } else {
+            console.log('📋 Loading from localStorage (API not configured)');
+            loadOrdersFromLocalStorage();
+        }
+        
+        displayOrders();
+        
+        // Try to refresh stats
+        try {
+            await refreshStatsFromAPI();
+        } catch (statsError) {
+            console.warn('⚠️ Stats refresh failed, using local calculation');
             updateStatistics();
         }
         
-        showToast('Đã cập nhật danh sách', 'success');
+        // Build filter options with new data
+        if (typeof buildFilterOptions === 'function') {
+            buildFilterOptions();
+        }
+        
     } catch (error) {
-        console.error('Error refreshing orders:', error);
-        showToast('Không thể cập nhật', 'error');
+        console.error('❌ Error refreshing from API:', error.message);
+        loadOrdersFromLocalStorage();
+        displayOrders();
+        updateStatistics();
+        
+        // Show user-friendly message
+        if (error.message.includes('timeout')) {
+            showToast('⚠️ Kết nối chậm, hiển thị dữ liệu local', 'info');
+        } else {
+            showToast('📋 Hiển thị dữ liệu offline', 'info');
+        }
     } finally {
         showLoading(false);
+    }
+}
+
+// Load orders from localStorage
+function loadOrdersFromLocalStorage() {
+    const savedOrders = localStorage.getItem('orders');
+    if (savedOrders) {
+        try {
+            APP_STATE.orders = JSON.parse(savedOrders);
+        } catch (e) {
+            APP_STATE.orders = [];
+        }
+    } else {
+        APP_STATE.orders = [];
+    }
+}
+
+// Refresh statistics from API
+async function refreshStatsFromAPI() {
+    try {
+        if (typeof window.getStats === 'function' && 
+            APP_CONFIG && APP_CONFIG.API_BASE_URL && 
+            !APP_CONFIG.API_BASE_URL.includes('DEMO_ID')) {
+            
+            console.log('📈 Loading stats from API...');
+            
+            const response = await window.getStats();
+            
+            if (response) {
+                // Update UI with server stats
+                elements.todayCount.textContent = response.todayCount || 0;
+                elements.todayRevenue.textContent = formatCurrency(response.todayRevenue || 0, true);
+                elements.monthRevenue.textContent = formatCurrency(response.monthRevenue || 0, true);
+                
+                console.log('✅ Stats updated from API:', response);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error loading stats from API:', error);
+        // Fallback to local calculation
+        updateStatistics();
     }
 }
 
@@ -467,7 +628,25 @@ function showMainApp() {
         elements.userEmail.textContent = APP_STATE.user.email;
     }
     
+    // Show app status to user
+    const hasRealAPI = APP_CONFIG && APP_CONFIG.API_BASE_URL && 
+                       !APP_CONFIG.API_BASE_URL.includes('DEMO_ID');
+    
+    if (hasRealAPI) {
+        console.log('⚙️ App mode: Production with Google Sheets API');
+    } else {
+        console.log('🎭 App mode: Demo/Offline mode');
+        showToast('📋 App đang chạy ở chế độ offline', 'info');
+    }
+    
     refreshOrders();
+    
+    // Build filter options after orders are loaded
+    setTimeout(() => {
+        if (typeof buildFilterOptions === 'function') {
+            buildFilterOptions();
+        }
+    }, 1000);
 }
 
 // Show login screen

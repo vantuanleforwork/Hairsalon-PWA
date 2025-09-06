@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple API Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h1 class="text-2xl font-bold mb-4">🌐 Simple API Test</h1>
+            
+            <!-- API Status -->
+            <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+                <h3 class="font-semibold mb-2">📡 API Configuration</h3>
+                <div id="apiConfig" class="text-sm text-gray-600">Checking...</div>
+            </div>
+            
+            <!-- API Tests -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <!-- Health Check -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-semibold mb-2">🏥 Health Check</h3>
+                    <div id="healthResult" class="text-sm text-gray-600 mb-3">Not tested</div>
+                    <button onclick="testHealth()" class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Test Health
+                    </button>
+                </div>
+                
+                <!-- Get Stats -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-semibold mb-2">📊 Get Stats</h3>
+                    <div id="statsResult" class="text-sm text-gray-600 mb-3">Not tested</div>
+                    <button onclick="testStats()" class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                        Test Stats
+                    </button>
+                </div>
+                
+                <!-- Get Orders -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-semibold mb-2">📋 Get Orders</h3>
+                    <div id="ordersResult" class="text-sm text-gray-600 mb-3">Not tested</div>
+                    <button onclick="testOrders()" class="w-full px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+                        Test Orders
+                    </button>
+                </div>
+                
+                <!-- Create Order -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-semibold mb-2">📝 Create Order</h3>
+                    <div id="createResult" class="text-sm text-gray-600 mb-3">Not tested</div>
+                    <button onclick="testCreate()" class="w-full px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
+                        Test Create
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Raw API Test -->
+            <div class="mb-6 p-4 bg-yellow-50 rounded-lg">
+                <h3 class="font-semibold mb-2">🔧 Raw API Test</h3>
+                <div class="space-y-2">
+                    <input type="text" id="rawAction" placeholder="action (e.g., health, stats)" 
+                           class="w-full px-3 py-2 border rounded">
+                    <button onclick="testRawAPI()" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                        Send Raw Request
+                    </button>
+                    <div id="rawResult" class="text-sm text-gray-600 mt-2">No request sent</div>
+                </div>
+            </div>
+            
+            <!-- Console Logs -->
+            <div class="p-4 bg-gray-50 rounded-lg">
+                <h3 class="font-semibold mb-2">📝 Console Logs</h3>
+                <div id="consoleLogs" class="text-xs text-gray-500 max-h-60 overflow-y-auto font-mono">
+                    Starting API test...<br>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Scripts -->
+    <script src="config.js"></script>
+    <script src="js/api.js"></script>
+
+    <script>
+        // Custom console log to show in UI
+        function logToUI(message, isError = false) {
+            const logsDiv = document.getElementById('consoleLogs');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = isError ? 'text-red-600' : 'text-blue-600';
+            logsDiv.innerHTML += `<span class="${color}">[${timestamp}]</span> ${message}<br>`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            
+            if (isError) {
+                console.error(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        // Check API configuration
+        function checkAPIConfig() {
+            const configDiv = document.getElementById('apiConfig');
+            
+            if (typeof APP_CONFIG === 'undefined') {
+                configDiv.innerHTML = '❌ APP_CONFIG not found';
+                logToUI('❌ APP_CONFIG not found', true);
+                return false;
+            }
+
+            const apiURL = APP_CONFIG.API_BASE_URL;
+            const isDemo = !apiURL || apiURL.includes('DEMO_ID');
+            const isValid = apiURL && apiURL.includes('script.google.com');
+
+            configDiv.innerHTML = `
+                🔗 <strong>API URL:</strong> ${apiURL ? apiURL.substring(0, 60) + '...' : 'NOT SET'}<br>
+                📊 <strong>Status:</strong> ${isDemo ? '⚠️ DEMO MODE' : isValid ? '✅ CONFIGURED' : '❌ INVALID'}<br>
+                🌐 <strong>Type:</strong> ${isValid ? 'Google Apps Script' : 'Unknown'}
+            `;
+
+            logToUI(`📡 API Config checked - Status: ${isDemo ? 'DEMO' : isValid ? 'OK' : 'INVALID'}`);
+            return isValid && !isDemo;
+        }
+
+        // Test health endpoint
+        async function testHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.innerHTML = '🔄 Testing...';
+            logToUI('🏥 Testing health endpoint...');
+
+            try {
+                // Direct fetch test first
+                const response = await fetch(APP_CONFIG.API_BASE_URL + '?action=health');
+                const data = await response.text();
+                
+                logToUI(`📡 Health response: ${data.substring(0, 100)}...`);
+                resultDiv.innerHTML = `✅ Response received<br><small>${data.substring(0, 50)}...</small>`;
+                
+            } catch (error) {
+                logToUI(`❌ Health test failed: ${error.message}`, true);
+                resultDiv.innerHTML = `❌ Failed<br><small>${error.message}</small>`;
+            }
+        }
+
+        // Test stats endpoint
+        async function testStats() {
+            const resultDiv = document.getElementById('statsResult');
+            resultDiv.innerHTML = '🔄 Testing...';
+            logToUI('📊 Testing stats endpoint...');
+
+            try {
+                if (typeof window.getStats !== 'function') {
+                    throw new Error('getStats function not available');
+                }
+
+                const result = await window.getStats();
+                logToUI(`📊 Stats result: ${JSON.stringify(result)}`);
+                
+                if (result) {
+                    resultDiv.innerHTML = `✅ Success<br><small>Revenue: ${result.todayRevenue || 0}</small>`;
+                } else {
+                    resultDiv.innerHTML = `⚠️ No data<br><small>Empty response</small>`;
+                }
+                
+            } catch (error) {
+                logToUI(`❌ Stats test failed: ${error.message}`, true);
+                resultDiv.innerHTML = `❌ Failed<br><small>${error.message}</small>`;
+            }
+        }
+
+        // Test orders endpoint
+        async function testOrders() {
+            const resultDiv = document.getElementById('ordersResult');
+            resultDiv.innerHTML = '🔄 Testing...';
+            logToUI('📋 Testing orders endpoint...');
+
+            try {
+                if (typeof window.getOrders !== 'function') {
+                    throw new Error('getOrders function not available');
+                }
+
+                const result = await window.getOrders();
+                logToUI(`📋 Orders result: ${JSON.stringify(result)}`);
+                
+                if (result && result.orders) {
+                    resultDiv.innerHTML = `✅ Success<br><small>${result.orders.length} orders</small>`;
+                } else {
+                    resultDiv.innerHTML = `⚠️ No data<br><small>No orders found</small>`;
+                }
+                
+            } catch (error) {
+                logToUI(`❌ Orders test failed: ${error.message}`, true);
+                resultDiv.innerHTML = `❌ Failed<br><small>${error.message}</small>`;
+            }
+        }
+
+        // Test create order
+        async function testCreate() {
+            const resultDiv = document.getElementById('createResult');
+            resultDiv.innerHTML = '🔄 Testing...';
+            logToUI('📝 Testing create order endpoint...');
+
+            try {
+                if (typeof window.createOrder !== 'function') {
+                    throw new Error('createOrder function not available');
+                }
+
+                const testData = {
+                    employee: 'test@example.com',
+                    service: 'API Test Service',
+                    price: 50000,
+                    notes: 'Test order from API test page'
+                };
+
+                const result = await window.createOrder(testData);
+                logToUI(`📝 Create result: ${JSON.stringify(result)}`);
+                
+                if (result) {
+                    resultDiv.innerHTML = `✅ Success<br><small>Order created</small>`;
+                } else {
+                    resultDiv.innerHTML = `⚠️ Unknown<br><small>No response data</small>`;
+                }
+                
+            } catch (error) {
+                logToUI(`❌ Create test failed: ${error.message}`, true);
+                resultDiv.innerHTML = `❌ Failed<br><small>${error.message}</small>`;
+            }
+        }
+
+        // Test raw API
+        async function testRawAPI() {
+            const resultDiv = document.getElementById('rawResult');
+            const action = document.getElementById('rawAction').value || 'health';
+            
+            resultDiv.innerHTML = '🔄 Testing...';
+            logToUI(`🔧 Testing raw API with action: ${action}`);
+
+            try {
+                const url = `${APP_CONFIG.API_BASE_URL}?action=${action}`;
+                logToUI(`📡 Raw request to: ${url}`);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                const data = await response.text();
+                logToUI(`📡 Raw response: ${data}`);
+                
+                resultDiv.innerHTML = `✅ Response<br><small>${data.substring(0, 100)}${data.length > 100 ? '...' : ''}</small>`;
+                
+            } catch (error) {
+                logToUI(`❌ Raw API failed: ${error.message}`, true);
+                
+                // Try no-cors mode
+                try {
+                    logToUI('🔄 Retrying with no-cors mode...');
+                    const url = `${APP_CONFIG.API_BASE_URL}?action=${action}`;
+                    await fetch(url, { mode: 'no-cors' });
+                    resultDiv.innerHTML = `⚠️ Request sent (no-cors)<br><small>Cannot read response</small>`;
+                    logToUI('⚠️ Request sent with no-cors mode');
+                } catch (noCorsError) {
+                    resultDiv.innerHTML = `❌ Failed<br><small>${error.message}</small>`;
+                }
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            logToUI('🔄 Page loaded, checking API config...');
+            setTimeout(checkAPIConfig, 500);
+        });
+    </script>
+</body>
+</html>
