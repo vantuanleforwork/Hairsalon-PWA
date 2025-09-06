@@ -5,8 +5,8 @@
 
 import AuthMiddleware from '../middleware/auth.middleware.js';
 import AuthService from '../services/auth.service.js';
-import { EventBus } from './eventBus.js';
-import { NotificationService } from '../services/notification.service.js';
+import EventBus from './eventBus.js';
+import NotificationService from '../services/notification.service.js';
 
 export class RouterGuard {
   constructor() {

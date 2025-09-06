@@ -4,8 +4,8 @@
  */
 
 import AuthService from '../services/auth.service.js';
-import { EventBus } from '../core/eventBus.js';
-import { NotificationService } from '../services/notification.service.js';
+import EventBus from '../core/eventBus.js';
+import NotificationService from '../services/notification.service.js';
 
 export class AuthMiddleware {
   constructor() {

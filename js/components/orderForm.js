@@ -3,11 +3,11 @@
  * Features: Validation, Auto-save, Offline support, Real-time preview
  */
 
-import { EventBus } from '../core/eventBus.js';
+import EventBus from '../core/eventBus.js';
 import { ValidationManager } from '../core/validation.js';
-import { NotificationService } from '../services/notification.service.js';
+import NotificationService from '../services/notification.service.js';
 import { OrderService } from '../services/order.service.js';
-import { StorageService } from '../services/storage.service.js';
+import StorageService from '../services/storage.service.js';
 
 export class OrderForm {
   constructor(container, options = {}) {

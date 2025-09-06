@@ -3,8 +3,8 @@
  * Features: Multiple types, Auto-dismiss, Queue system, Animations, Actions
  */
 
-import { EventBus } from '../core/eventBus.js';
-import { Utils } from '../core/utils.js';
+import EventBus from '../core/eventBus.js';
+import Utils from '../core/utils.js';
 
 export class NotificationManager {
   constructor(options = {}) {

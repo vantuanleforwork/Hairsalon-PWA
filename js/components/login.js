@@ -3,11 +3,11 @@
  * Features: Google Sign-In, Session management, Remember me, Offline support
  */
 
-import { EventBus } from '../core/eventBus.js';
-import { Utils } from '../core/utils.js';
-import { NotificationService } from '../services/notification.service.js';
-import { AuthService } from '../services/auth.service.js';
-import { StorageService } from '../services/storage.service.js';
+import EventBus from '../core/eventBus.js';
+import Utils from '../core/utils.js';
+import NotificationService from '../services/notification.service.js';
+import Auth from '../services/auth.service.js';
+import Storage from '../services/storage.service.js';
 
 export class LoginComponent {
   constructor(container, options = {}) {

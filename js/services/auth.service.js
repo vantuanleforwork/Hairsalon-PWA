@@ -3,7 +3,7 @@
  * Handles authentication, session management, token refresh, user management
  */
 
-import { StorageService } from './storage.service.js';
+import Storage from './storage.service.js';
 import EventBus from '../core/eventBus.js';
 import Utils from '../core/utils.js';
 
@@ -131,7 +131,7 @@ export class AuthService {
       await this.setSession(user, session);
       
       // Mark for sync when online
-      await StorageService.set('pending_google_auth', {
+      await Storage.set('pending_google_auth', {
         userInfo,
         timestamp: Date.now()
       });
@@ -206,9 +206,9 @@ export class AuthService {
     this.isAuthenticated = true;
     
     // Store in localStorage for persistence
-    await StorageService.set('current_user', user);
-    await StorageService.set('current_session', session);
-    await StorageService.set('user_session', {
+    await Storage.set('current_user', user);
+    await Storage.set('current_session', session);
+    await Storage.set('user_session', {
       user,
       session,
       timestamp: Date.now()
@@ -231,7 +231,7 @@ export class AuthService {
    */
   async restoreSession() {
     try {
-      const storedSession = await StorageService.get('user_session');
+      const storedSession = await Storage.get('user_session');
       
       if (storedSession && storedSession.user && storedSession.session) {
         const { user, session } = storedSession;
@@ -279,9 +279,9 @@ export class AuthService {
     this.isAuthenticated = false;
     
     // Clear from storage
-    await StorageService.remove('current_user');
-    await StorageService.remove('current_session');
-    await StorageService.remove('user_session');
+    await Storage.remove('current_user');
+    await Storage.remove('current_session');
+    await Storage.remove('user_session');
     
     // Clear session timeout
     if (this.sessionTimeout) {
@@ -323,8 +323,8 @@ export class AuthService {
       await this.clearSession();
       
       // Clear any pending auth data
-      await StorageService.remove('pending_google_auth');
-      await StorageService.remove('remember_login');
+      await Storage.remove('pending_google_auth');
+      await Storage.remove('remember_login');
       
       // Emit logout event
       EventBus.emit('auth:logout', {
@@ -498,13 +498,13 @@ export class AuthService {
           this.currentSession = result.session;
           
           // Update stored session
-          const sessionData = await StorageService.get('user_session');
+          const sessionData = await Storage.get('user_session');
           if (sessionData) {
             sessionData.session = result.session;
-            await StorageService.set('user_session', sessionData);
+            await Storage.set('user_session', sessionData);
           }
           
-          await StorageService.set('current_session', result.session);
+          await Storage.set('current_session', result.session);
           this.setupSessionTimeout(result.session.expiresAt);
           
           // Emit refresh event
@@ -586,7 +586,7 @@ export class AuthService {
    */
   async syncOfflineAuth() {
     try {
-      const pendingAuth = await StorageService.get('pending_google_auth');
+      const pendingAuth = await Storage.get('pending_google_auth');
       
       if (pendingAuth && pendingAuth.userInfo) {
         console.log('Syncing offline Google authentication...');
@@ -602,7 +602,7 @@ export class AuthService {
           await this.setSession(result.user, result.session);
           
           // Remove pending auth
-          await StorageService.remove('pending_google_auth');
+          await Storage.remove('pending_google_auth');
           
           EventBus.emit('auth:offline-sync-complete', {
             user: result.user
@@ -631,7 +631,7 @@ export class AuthService {
    * Check if remember login is enabled
    */
   async shouldRememberLogin() {
-    return await StorageService.get('remember_login') === true;
+    return await Storage.get('remember_login') === true;
   }
 
   /**
@@ -668,3 +668,4 @@ export class AuthService {
 
 // Export singleton instance
 export default new AuthService();
+

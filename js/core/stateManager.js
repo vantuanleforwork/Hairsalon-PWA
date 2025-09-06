@@ -3,7 +3,7 @@
  * Simple state management system for the Hair Salon PWA
  */
 
-import { EventBus } from './eventBus.js';
+import EventBus from './eventBus.js';
 
 export class StateManager {
   constructor() {
