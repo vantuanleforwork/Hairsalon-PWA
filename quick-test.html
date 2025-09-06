@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick OAuth Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow p-6">
+        <h1 class="text-2xl font-bold mb-4">🔧 Quick OAuth Fix</h1>
+        
+        <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-2">Current URL:</p>
+            <code class="bg-gray-100 p-2 rounded text-xs" id="currentUrl"></code>
+        </div>
+        
+        <div class="mb-4">
+            <h3 class="font-bold mb-2">⚠️ OAuth Origins Issue</h3>
+            <p class="text-sm text-red-600">
+                "The given origin is not allowed for the given client ID"
+            </p>
+        </div>
+        
+        <div class="mb-6">
+            <h3 class="font-bold mb-2">🛠️ Fix Steps:</h3>
+            <ol class="text-sm space-y-2">
+                <li class="flex items-start">
+                    <span class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2 mt-0.5">1</span>
+                    <div>
+                        Vào <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="text-blue-600 underline">Google Cloud Console</a>
+                    </div>
+                </li>
+                <li class="flex items-start">
+                    <span class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2 mt-0.5">2</span>
+                    <div>
+                        Edit OAuth 2.0 Client ID
+                    </div>
+                </li>
+                <li class="flex items-start">
+                    <span class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2 mt-0.5">3</span>
+                    <div>
+                        Thêm vào <strong>Authorized JavaScript origins</strong>:
+                        <div class="bg-gray-100 p-2 rounded mt-1 font-mono text-xs">
+                            <div id="origins"></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="flex items-start">
+                    <span class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2 mt-0.5">4</span>
+                    <div>Save và đợi 2-3 phút</div>
+                </li>
+            </ol>
+        </div>
+        
+        <div class="border-t pt-4">
+            <button onclick="testAuth()" class="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">
+                🧪 Test Auth After Fix
+            </button>
+            
+            <button onclick="useMockLogin()" class="w-full bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600 mt-2">
+                🔄 Use Mock Login (Bypass)
+            </button>
+        </div>
+        
+        <div id="result" class="mt-4 p-3 rounded hidden"></div>
+    </div>
+
+    <script>
+        // Show current URL and generate origins
+        document.addEventListener('DOMContentLoaded', function() {
+            const url = window.location.href;
+            document.getElementById('currentUrl').textContent = url;
+            
+            // Generate origins based on current URL
+            const origin = window.location.origin;
+            const origins = [
+                origin,
+                'http://localhost:5500',
+                'http://127.0.0.1:5500',
+                'http://localhost',
+                'http://127.0.0.1'
+            ];
+            
+            document.getElementById('origins').innerHTML = origins
+                .filter((v, i, arr) => arr.indexOf(v) === i) // Remove duplicates
+                .map(o => `<div>${o}</div>`)
+                .join('');
+        });
+        
+        function testAuth() {
+            const result = document.getElementById('result');
+            result.className = 'mt-4 p-3 rounded bg-blue-100 text-blue-800';
+            result.innerHTML = `
+                <p><strong>Testing...</strong></p>
+                <p>1. Mở main app: <a href="index.html" class="underline">index.html</a></p>
+                <p>2. Click "Đăng nhập với Google"</p>
+                <p>3. Kiểm tra console có còn lỗi "origin not allowed" không</p>
+            `;
+            result.classList.remove('hidden');
+        }
+        
+        function useMockLogin() {
+            // Save mock user to bypass OAuth
+            const mockUser = {
+                id: 'bypass-123',
+                email: 'test@salon.com',
+                name: 'Test User (Bypass)',
+                picture: null,
+                token: 'bypass-token'
+            };
+            
+            localStorage.setItem('user', JSON.stringify(mockUser));
+            
+            const result = document.getElementById('result');
+            result.className = 'mt-4 p-3 rounded bg-green-100 text-green-800';
+            result.innerHTML = `
+                <p><strong>✅ Mock user created!</strong></p>
+                <p>Bây giờ mở <a href="index.html" class="underline">index.html</a></p>
+                <p>App sẽ tự động login với: ${mockUser.email}</p>
+            `;
+            result.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

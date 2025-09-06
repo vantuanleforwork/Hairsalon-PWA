@@ -73,10 +73,14 @@ Click **Save and Continue**
 2. **Name**: `Salon Manager Web Client`
 
 ### 4.3 Authorized JavaScript Origins
-Thêm các URLs:
+Thêm các URLs (QUAN TRỌNG - PHẢI CHÍNH XÁC):
 - `http://localhost:5500` (cho development)
-- `http://127.0.0.1:5500` (cho development)
+- `http://127.0.0.1:5500` (cho development với Live Server)
+- `http://localhost` (fallback)
+- `http://127.0.0.1` (fallback)
 - `https://yourusername.github.io` (cho production)
+
+⚠️ **LƯU Ý**: Không thêm port khác ngoài 5500 nếu dùng Live Server
 
 ### 4.4 Authorized Redirect URIs
 Thêm các URLs:

@@ -290,18 +290,22 @@ function mockLogin() {
     AUTH.onLoginSuccess(mockUser);
 }
 
-// Export functions to global scope
-window.AUTH = {
-    init: initAuth,
-    login: login,
-    logout: logout,
-    renderLoginButton: renderLoginButton,
-    getCurrentUser: getCurrentUser,
-    isAuthenticated: isAuthenticated,
-    isAllowedEmail: isAllowedEmail,
-    handleCredentialResponse: handleCredentialResponse
-};
-
-// Also export individual functions
-window.initAuth = initAuth;
-window.handleCredentialResponse = handleCredentialResponse;
+// Export functions to global scope IMMEDIATELY
+if (typeof window !== 'undefined') {
+    window.AUTH = {
+        init: initAuth,
+        login: login,
+        logout: logout,
+        renderLoginButton: renderLoginButton,
+        getCurrentUser: getCurrentUser,
+        isAuthenticated: isAuthenticated,
+        isAllowedEmail: isAllowedEmail,
+        handleCredentialResponse: handleCredentialResponse
+    };
+    
+    // Also export individual functions for fallback
+    window.initAuth = initAuth;
+    window.handleCredentialResponse = handleCredentialResponse;
+    
+    console.log('✅ AUTH module exported:', Object.keys(window.AUTH));
+}
