@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delay to ensure all modules are loaded
     setTimeout(() => {
         initializeAuth();
-    }, 100);
+    }, 500); // Increased delay for AUTH module
     
     updateDateTime();
     
@@ -382,66 +382,71 @@ function updateStatistics() {
     elements.monthRevenue.textContent = formatCurrency(monthRevenue, true);
 }
 
-// Initialize authentication
+// Simple auth initialization
 function initializeAuth() {
-    console.log('🔑 Initializing auth...');
-    console.log('AUTH available:', typeof AUTH);
-    console.log('AUTH.init available:', typeof AUTH?.init);
+    console.log('🔑 Starting auth initialization...');
     
-    // Initialize Google Auth
-    if (typeof AUTH !== 'undefined' && typeof AUTH.init === 'function') {
-        console.log('✅ Using AUTH module');
-        AUTH.init({
+    // Check if auth functions exist
+    if (typeof window.initAuth === 'function') {
+        console.log('✅ Auth functions available, initializing...');
+        
+        // Initialize auth with callbacks
+        window.initAuth({
             onLoginSuccess: (user) => {
-                console.log('User logged in:', user);
+                console.log('🎉 Login success:', user.email);
                 APP_STATE.user = user;
                 showMainApp();
                 showToast(`Xin chào ${user.name || user.email}!`, 'success');
             },
             onLoginError: (error) => {
-                console.error('Login error:', error);
+                console.error('❌ Login error:', error);
                 showToast(error, 'error');
                 showLoginScreen();
             },
             onLogout: () => {
-                console.log('User logged out');
+                console.log('💪 User logged out');
                 APP_STATE.user = null;
                 showLoginScreen();
                 showToast('Đã đăng xuất', 'info');
             }
         });
     } else {
-        console.warn('⚠️ AUTH module not available, using fallback');
-        checkLocalAuth();
+        console.warn('⚠️ Auth functions not found, using fallback');
+        // Fallback: check localStorage
+        const user = localStorage.getItem('user');
+        if (user) {
+            try {
+                APP_STATE.user = JSON.parse(user);
+                showMainApp();
+            } catch (e) {
+                showLoginScreen();
+            }
+        } else {
+            showLoginScreen();
+        }
     }
 }
 
-// Fallback auth check
-function checkLocalAuth() {
-    const user = localStorage.getItem('user');
-    if (user) {
-        APP_STATE.user = JSON.parse(user);
-        showMainApp();
-    } else {
-        showLoginScreen();
-    }
-}
 
-// Handle login with Google OAuth
+// Handle login button click
 function handleLogin() {
-    if (typeof AUTH !== 'undefined') {
-        AUTH.login();
+    console.log('🚀 Login button clicked');
+    
+    if (typeof window.loginWithGoogle === 'function') {
+        window.loginWithGoogle();
     } else {
-        console.warn('AUTH module not available, using mock login');
-        mockLoginFallback();
+        console.warn('⚠️ Login function not available');
+        alert('Login function not available. Please refresh the page.');
     }
 }
 
-// Handle logout
+// Handle logout button click
 function handleLogout() {
     if (confirm('Bạn có chắc muốn đăng xuất?')) {
-        if (typeof AUTH !== 'undefined') {
-            AUTH.logout();
+        console.log('💪 Logout button clicked');
+        
+        if (typeof window.logoutUser === 'function') {
+            window.logoutUser();
         } else {
             // Fallback logout
             APP_STATE.user = null;
@@ -452,25 +457,6 @@ function handleLogout() {
     }
 }
 
-// Mock login fallback for development
-function mockLoginFallback() {
-    showLoading(true);
-    
-    setTimeout(() => {
-        const mockUser = {
-            id: 'demo-123',
-            email: 'demo@salon.com',
-            name: 'Demo User',
-            picture: null
-        };
-        
-        APP_STATE.user = mockUser;
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        showMainApp();
-        showToast('Đăng nhập demo thành công!', 'success');
-        showLoading(false);
-    }, 1000);
-}
 
 // Show main app
 function showMainApp() {
@@ -489,100 +475,9 @@ function showLoginScreen() {
     elements.loginScreen.classList.remove('hidden');
     elements.mainApp.classList.add('hidden');
     
-    // Try to render Google OAuth button
-    setTimeout(() => {
-        renderGoogleLoginButton();
-    }, 1000);
+    console.log('🔑 Login screen shown');
 }
 
-// Render Google OAuth button with better mobile support
-function renderGoogleLoginButton() {
-    console.log('🔄 Attempting to render Google OAuth button...');
-    
-    if (typeof google === 'undefined' || !google.accounts) {
-        console.warn('⚠️ Google Identity Services not loaded, showing fallback');
-        showFallbackButton();
-        return;
-    }
-    
-    // Check if we have valid client ID
-    if (typeof APP_CONFIG === 'undefined' || 
-        !APP_CONFIG.GOOGLE_CLIENT_ID || 
-        APP_CONFIG.GOOGLE_CLIENT_ID.includes('DEMO_CLIENT_ID')) {
-        console.warn('⚠️ No valid Google Client ID, showing fallback');
-        showFallbackButton();
-        return;
-    }
-    
-    try {
-        console.log('🔧 Initializing Google OAuth with Client ID:', APP_CONFIG.GOOGLE_CLIENT_ID.substring(0, 20) + '...');
-        
-        // Initialize Google OAuth
-        google.accounts.id.initialize({
-            client_id: APP_CONFIG.GOOGLE_CLIENT_ID,
-            callback: handleCredentialResponse, // Direct reference
-            auto_select: false, // Disable auto-select for better UX
-            cancel_on_tap_outside: false, // Don't cancel on mobile tap outside
-            use_fedcm_for_prompt: false // Disable FedCM for compatibility
-        });
-        
-        // Clear container first
-        elements.googleLoginContainer.innerHTML = '';
-        
-        // Render Google button with mobile-optimized settings
-        google.accounts.id.renderButton(elements.googleLoginContainer, {
-            type: 'standard',
-            size: 'large',
-            text: 'signin_with',
-            shape: 'rectangular',
-            logo_alignment: 'left',
-            theme: 'outline',
-            locale: 'vi',
-            click_listener: () => {
-                console.log('📱 Google button clicked (mobile)');
-                // Trigger One Tap if direct button click fails
-                setTimeout(() => {
-                    google.accounts.id.prompt();
-                }, 100);
-            }
-        });
-        
-        // Hide fallback button
-        elements.loginBtn.style.display = 'none';
-        
-        console.log('✅ Google OAuth button rendered successfully');
-        
-        // Add mobile touch event listeners
-        const googleBtn = elements.googleLoginContainer.querySelector('div[role="button"]');
-        if (googleBtn) {
-            googleBtn.style.cursor = 'pointer';
-            googleBtn.style.touchAction = 'manipulation'; // Prevent double-tap zoom
-            
-            // Add mobile-friendly touch events
-            googleBtn.addEventListener('touchstart', (e) => {
-                console.log('📱 Touch start on Google button');
-                googleBtn.style.opacity = '0.8';
-            });
-            
-            googleBtn.addEventListener('touchend', (e) => {
-                googleBtn.style.opacity = '1';
-            });
-        }
-        
-    } catch (error) {
-        console.error('❌ Error rendering Google button:', error);
-        showFallbackButton();
-    }
-}
-
-// Show fallback button with improved mobile support
-function showFallbackButton() {
-    elements.loginBtn.style.display = 'flex';
-    elements.loginBtn.style.touchAction = 'manipulation';
-    elements.googleLoginContainer.innerHTML = '';
-    
-    console.log('🔄 Showing fallback login button');
-}
 
 // Handle Google OAuth response (fallback)
 function handleGoogleResponse(response) {
