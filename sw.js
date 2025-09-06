@@ -11,41 +11,30 @@ const IMAGES_CACHE = `${CACHE_PREFIX}-images-v${CACHE_VERSION}`;
 
 // Resources to cache immediately
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/css/styles.css',
-  '/css/tailwind.css',
-  '/js/main.js',
-  '/js/config.js',
+  './',
+  './index.html',
+  './offline.html',
+  './manifest.json',
+  './css/styles.css',
+  './css/mobile.css',
+  './js/main.js',
   
   // Core modules
-  '/js/core/utils.js',
-  '/js/core/validation.js',
-  '/js/core/eventBus.js',
-  '/js/core/stateManager.js',
+  './js/core/utils.js',
+  './js/core/validation.js',
+  './js/core/eventBus.js',
+  './js/core/stateManager.js',
   
   // Services
-  '/js/services/api.service.js',
-  '/js/services/order.service.js',
-  '/js/services/stats.service.js',
-  '/js/services/notification.service.js',
-  '/js/services/auth.service.js',
-  '/js/services/storage.service.js',
+  './js/services/api.service.js',
+  './js/services/order.service.js',
+  './js/services/stats.service.js',
+  './js/services/notification.service.js',
+  './js/services/auth.service.js',
+  './js/services/storage.service.js',
   
-  // Fonts
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
-  'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2',
-  
-  // Icons
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
-  '/icons/apple-touch-icon.png',
-  '/icons/favicon-32x32.png',
-  '/icons/favicon-16x16.png',
-  
-  // Offline fallback
-  '/offline.html'
+  // Only cache fonts from external sources, skip local files that may not exist
+  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'
 ];
 
 // API endpoints patterns
@@ -148,6 +137,11 @@ self.addEventListener('fetch', event => {
 // Cache First - Good for static assets
 async function cacheFirst(request, cacheName) {
   try {
+    // Skip non-HTTP(S) requests
+    if (!request.url.startsWith('http')) {
+      return fetch(request);
+    }
+    
     const cache = await caches.open(cacheName);
     const cachedResponse = await cache.match(request);
     
@@ -157,8 +151,12 @@ async function cacheFirst(request, cacheName) {
     
     const networkResponse = await fetch(request);
     
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
+    if (networkResponse.ok && request.url.startsWith('http')) {
+      try {
+        cache.put(request, networkResponse.clone());
+      } catch (putError) {
+        console.warn('Failed to cache request:', request.url, putError);
+      }
     }
     
     return networkResponse;
@@ -178,6 +176,11 @@ async function cacheFirst(request, cacheName) {
 // Network First with Cache Fallback - Good for API calls
 async function networkFirstWithCache(request, cacheName, timeout = 5000) {
   try {
+    // Skip non-HTTP(S) requests
+    if (!request.url.startsWith('http')) {
+      return fetch(request);
+    }
+    
     const cache = await caches.open(cacheName);
     
     // Try network with timeout
@@ -188,8 +191,12 @@ async function networkFirstWithCache(request, cacheName, timeout = 5000) {
       )
     ]);
     
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
+    if (networkResponse.ok && request.url.startsWith('http')) {
+      try {
+        cache.put(request, networkResponse.clone());
+      } catch (putError) {
+        console.warn('Failed to cache request:', request.url, putError);
+      }
       return networkResponse;
     }
     
@@ -226,13 +233,22 @@ async function networkFirstWithCache(request, cacheName, timeout = 5000) {
 
 // Stale While Revalidate - Good for dynamic content
 async function staleWhileRevalidate(request, cacheName) {
+  // Skip non-HTTP(S) requests
+  if (!request.url.startsWith('http')) {
+    return fetch(request);
+  }
+  
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
   
   // Fetch in background to update cache
   const networkResponsePromise = fetch(request).then(networkResponse => {
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
+    if (networkResponse.ok && request.url.startsWith('http')) {
+      try {
+        cache.put(request, networkResponse.clone());
+      } catch (putError) {
+        console.warn('Failed to cache request:', request.url, putError);
+      }
     }
     return networkResponse;
   }).catch(error => {
