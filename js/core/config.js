@@ -11,8 +11,8 @@ const CONFIG = {
   // Google Apps Script Web App URL (REPLACE WITH YOUR ACTUAL URL)
   APPS_SCRIPT_URL: 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec',
   
-  // Google OAuth 2.0 Client ID (REPLACE WITH YOUR ACTUAL CLIENT ID)
-  GOOGLE_CLIENT_ID: 'YOUR_CLIENT_ID.apps.googleusercontent.com',
+  // Google OAuth 2.0 Client ID (project-specific)
+  GOOGLE_CLIENT_ID: '36454863313-7bd5r8eem67t4ru8fcjai66i1dabl4ap.apps.googleusercontent.com',
   
   // =============  APPLICATION SETTINGS =============
   
