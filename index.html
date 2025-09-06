@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hair Salon PWA</title>
+    <title>Salon - Tạo đơn hàng</title>
     
     <!-- PWA Meta -->
     <meta name="theme-color" content="#667eea">
-    <meta name="description" content="Ứng dụng quản lý salon đơn giản">
-    
-    <!-- Manifest -->
+    <meta name="description" content="Tạo đơn hàng salon nhanh chóng">
     <link rel="manifest" href="manifest.json">
     
-    <!-- Styles -->
     <style>
         * {
             margin: 0;
@@ -21,247 +18,283 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f7fa;
             color: #333;
+            line-height: 1.6;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
         }
         
         .header {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
             text-align: center;
             margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
         
         .header h1 {
             color: #667eea;
-            font-size: 2.5em;
+            font-size: 2em;
             margin-bottom: 10px;
         }
         
-        .header p {
-            color: #666;
-            font-size: 1.1em;
-        }
-        
-        .main-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin-bottom: 30px;
         }
         
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .card h3 {
-            color: #667eea;
-            font-size: 1.5em;
-            margin-bottom: 15px;
-        }
-        
-        .card p {
-            color: #666;
-            line-height: 1.6;
+        .form-group {
             margin-bottom: 20px;
         }
         
-        .btn {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
             font-size: 16px;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
         }
         
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background: #5a67d8;
         }
         
-        .status {
-            position: fixed;
-            top: 20px;
-            right: 20px;
+        .btn-full {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .orders-section {
             background: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .orders-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+        
+        .order-item {
+            padding: 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .order-id {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .order-time {
+            color: #666;
             font-size: 14px;
         }
         
-        .online { color: #10b981; }
-        .offline { color: #ef4444; }
+        .order-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
         
-        .install-prompt {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
+        .order-info {
+            font-size: 14px;
+        }
+        
+        .order-info strong {
+            color: #333;
+        }
+        
+        .empty-state {
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            display: none;
+            color: #999;
+            padding: 40px;
         }
         
-        .install-prompt.show {
-            display: block;
-        }
-        
-        /* Mobile styles */
-        @media (max-width: 768px) {
+        @media (max-width: 600px) {
             .container { padding: 10px; }
-            .header h1 { font-size: 2em; }
-            .main-content { grid-template-columns: 1fr; }
+            .form-container, .orders-section { padding: 20px; }
+            .order-details { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Status indicator -->
-        <div id="status" class="status">
-            <span id="status-text">🟢 Online</span>
+        <div class="header">
+            <h1>💇‍♀️ Salon - Tạo đơn hàng</h1>
         </div>
 
-        <!-- Header -->
-        <header class="header">
-            <h1>💇‍♀️ Hair Salon PWA</h1>
-            <p>Ứng dụng quản lý salon đơn giản và hiệu quả</p>
-        </header>
+        <!-- Form tạo đơn hàng -->
+        <div class="form-container">
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="customerName">Tên khách hàng *</label>
+                    <input type="text" id="customerName" required>
+                </div>
 
-        <!-- Main content -->
-        <main class="main-content">
-            <div class="card">
-                <h3>📋 Quản lý đơn hàng</h3>
-                <p>Tạo và theo dõi đơn hàng của khách hàng một cách dễ dàng.</p>
-                <button class="btn" onclick="showOrders()">Xem đơn hàng</button>
-            </div>
+                <div class="form-group">
+                    <label for="customerPhone">Số điện thoại *</label>
+                    <input type="tel" id="customerPhone" required>
+                </div>
 
-            <div class="card">
-                <h3>👥 Khách hàng</h3>
-                <p>Quản lý thông tin khách hàng và lịch sử dịch vụ.</p>
-                <button class="btn" onclick="showCustomers()">Danh sách khách hàng</button>
-            </div>
+                <div class="form-group">
+                    <label for="service">Dịch vụ *</label>
+                    <select id="service" required>
+                        <option value="">Chọn dịch vụ</option>
+                        <option value="Cắt tóc - 100k">Cắt tóc - 100,000đ</option>
+                        <option value="Gội đầu - 50k">Gội đầu - 50,000đ</option>
+                        <option value="Nhuộm tóc - 300k">Nhuộm tóc - 300,000đ</option>
+                        <option value="Uốn tóc - 250k">Uốn tóc - 250,000đ</option>
+                        <option value="Duỗi tóc - 200k">Duỗi tóc - 200,000đ</option>
+                        <option value="Combo cắt + gội - 130k">Combo cắt + gội - 130,000đ</option>
+                    </select>
+                </div>
 
-            <div class="card">
-                <h3>💼 Dịch vụ</h3>
-                <p>Quản lý các dịch vụ salon và bảng giá.</p>
-                <button class="btn" onclick="showServices()">Xem dịch vụ</button>
-            </div>
+                <div class="form-group">
+                    <label for="appointmentTime">Giờ hẹn</label>
+                    <input type="time" id="appointmentTime">
+                </div>
 
-            <div class="card">
-                <h3>📊 Thống kê</h3>
-                <p>Xem báo cáo doanh thu và hiệu suất kinh doanh.</p>
-                <button class="btn" onclick="showStats()">Xem thống kê</button>
-            </div>
-        </main>
+                <div class="form-group">
+                    <label for="notes">Ghi chú</label>
+                    <textarea id="notes" rows="3" placeholder="Ghi chú thêm về dịch vụ..."></textarea>
+                </div>
 
-        <!-- Install prompt -->
-        <div id="install-prompt" class="install-prompt">
-            <h3>📱 Cài đặt ứng dụng</h3>
-            <p>Cài đặt Hair Salon PWA để truy cập nhanh hơn!</p>
-            <button class="btn" id="install-btn">Cài đặt ngay</button>
-            <button class="btn" id="dismiss-btn" style="background: #ccc; margin-left: 10px;">Để sau</button>
+                <button type="submit" class="btn btn-full">Tạo đơn hàng</button>
+            </form>
+        </div>
+
+        <!-- Danh sách đơn hàng trong ngày -->
+        <div class="orders-section">
+            <h2>📋 Đơn hàng hôm nay (<span id="todayDate"></span>)</h2>
+            <div id="ordersList"></div>
         </div>
     </div>
 
     <script>
-        // Basic app functionality
-        let isOnline = navigator.onLine;
-        let deferredPrompt;
-
-        // Update online status
-        function updateStatus() {
-            const statusEl = document.getElementById('status-text');
-            if (navigator.onLine) {
-                statusEl.innerHTML = '🟢 Online';
-                statusEl.className = 'online';
-                isOnline = true;
-            } else {
-                statusEl.innerHTML = '🔴 Offline';
-                statusEl.className = 'offline';
-                isOnline = false;
-            }
-        }
-
-        // Simple functions for demo
-        function showOrders() {
-            alert('Chức năng quản lý đơn hàng đang được phát triển!');
-        }
-
-        function showCustomers() {
-            alert('Chức năng quản lý khách hàng đang được phát triển!');
-        }
-
-        function showServices() {
-            alert('Chức năng quản lý dịch vụ đang được phát triển!');
-        }
-
-        function showStats() {
-            alert('Chức năng thống kê đang được phát triển!');
-        }
-
-        // PWA install prompt
-        window.addEventListener('beforeinstallprompt', (e) => {
+        let orders = JSON.parse(localStorage.getItem('salon-orders') || '[]');
+        
+        // Hiển thị ngày hôm nay
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('vi-VN');
+        
+        // Xử lý form submit
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('install-prompt').classList.add('show');
+            
+            const order = {
+                id: Date.now(),
+                customerName: document.getElementById('customerName').value,
+                customerPhone: document.getElementById('customerPhone').value,
+                service: document.getElementById('service').value,
+                appointmentTime: document.getElementById('appointmentTime').value,
+                notes: document.getElementById('notes').value,
+                createdAt: new Date().toISOString(),
+                date: new Date().toDateString()
+            };
+            
+            orders.unshift(order);
+            localStorage.setItem('salon-orders', JSON.stringify(orders));
+            
+            // Reset form
+            this.reset();
+            
+            // Cập nhật danh sách
+            displayOrders();
+            
+            alert('Đã tạo đơn hàng thành công!');
         });
-
-        document.getElementById('install-btn').addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log('Install outcome:', outcome);
-                document.getElementById('install-prompt').classList.remove('show');
-                deferredPrompt = null;
+        
+        // Hiển thị danh sách đơn hàng
+        function displayOrders() {
+            const today = new Date().toDateString();
+            const todayOrders = orders.filter(order => order.date === today);
+            const container = document.getElementById('ordersList');
+            
+            if (todayOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>Chưa có đơn hàng nào trong ngày hôm nay</p>
+                    </div>
+                `;
+                return;
             }
-        });
-
-        document.getElementById('dismiss-btn').addEventListener('click', () => {
-            document.getElementById('install-prompt').classList.remove('show');
-        });
-
+            
+            container.innerHTML = todayOrders.map(order => `
+                <div class="order-item">
+                    <div class="order-header">
+                        <span class="order-id">#${order.id}</span>
+                        <span class="order-time">${new Date(order.createdAt).toLocaleTimeString('vi-VN')}</span>
+                    </div>
+                    <div class="order-details">
+                        <div class="order-info">
+                            <strong>Khách hàng:</strong> ${order.customerName}<br>
+                            <strong>SĐT:</strong> ${order.customerPhone}
+                        </div>
+                        <div class="order-info">
+                            <strong>Dịch vụ:</strong> ${order.service}<br>
+                            ${order.appointmentTime ? `<strong>Giờ hẹn:</strong> ${order.appointmentTime}` : ''}
+                        </div>
+                    </div>
+                    ${order.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Ghi chú: ${order.notes}</div>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        // Load orders when page loads
+        displayOrders();
+        
         // Register service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                    .then(registration => {
-                        console.log('SW registered:', registration);
-                    })
-                    .catch(registrationError => {
-                        console.log('SW registration failed:', registrationError);
-                    });
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed'));
             });
         }
-
-        // Event listeners
-        window.addEventListener('online', updateStatus);
-        window.addEventListener('offline', updateStatus);
-        window.addEventListener('load', updateStatus);
-
-        console.log('🚀 Hair Salon PWA loaded successfully!');
     </script>
 </body>
 </html>
