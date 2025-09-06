@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="vi" dir="ltr">
+<head>
+  <!-- Base Meta Tags -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  <!-- Primary Meta Tags -->
+  <title>Hair Salon PWA - Quản lý đơn hàng salon chuyên nghiệp</title>
+  <meta name="title" content="Hair Salon PWA - Quản lý đơn hàng salon chuyên nghiệp">
+  <meta name="description" content="Ứng dụng quản lý đơn hàng salon hiện đại với khả năng hoạt động offline, đồng bộ dữ liệu và giao diện thân thiện trên mobile.">
+  <meta name="keywords" content="salon, hair, quản lý đơn hàng, PWA, offline, mobile, beauty">
+  <meta name="author" content="Hair Salon PWA Team">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hairsalon-pwa.com/">
+  <meta property="og:title" content="Hair Salon PWA - Quản lý đơn hàng salon chuyên nghiệp">
+  <meta property="og:description" content="Ứng dụng quản lý đơn hàng salon hiện đại với khả năng hoạt động offline, đồng bộ dữ liệu và giao diện thân thiện trên mobile.">
+  <meta property="og:image" content="./assets/images/og-image.jpg">
+  <meta property="og:site_name" content="Hair Salon PWA">
+  <meta property="og:locale" content="vi_VN">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://hairsalon-pwa.com/">
+  <meta property="twitter:title" content="Hair Salon PWA - Quản lý đơn hàng salon chuyên nghiệp">
+  <meta property="twitter:description" content="Ứng dụng quản lý đơn hàng salon hiện đại với khả năng hoạt động offline, đồng bộ dữ liệu và giao diện thân thiện trên mobile.">
+  <meta property="twitter:image" content="./assets/images/og-image.jpg">
+  
+  <!-- PWA Meta Tags -->
+  <meta name="application-name" content="Hair Salon PWA">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hair Salon PWA">
+  <meta name="msapplication-TileColor" content="#7c3aed">
+  <meta name="msapplication-navbutton-color" content="#7c3aed">
+  <meta name="theme-color" content="#7c3aed">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#7c3aed">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#5b21b6">
+  
+  <!-- Security Headers -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.googletagmanager.com https://www.google-analytics.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com data:;
+    img-src 'self' data: blob: https: http:;
+    connect-src 'self' https://accounts.google.com https://www.googleapis.com https://www.google-analytics.com https://analytics.google.com wss: ws:;
+    media-src 'self' data: blob:;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+    upgrade-insecure-requests;
+  ">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
+  
+  <!-- Manifest -->
+  <link rel="manifest" href="./manifest.json">
+  
+  <!-- Favicons -->
+  <link rel="icon" href="./assets/icons/favicon.ico" sizes="any">
+  <link rel="icon" href="./assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/apple-touch-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="./assets/icons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="./assets/icons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="./assets/icons/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="./assets/icons/apple-touch-icon-76x76.png">
+  
+  <!-- Startup Images for iOS -->
+  <link rel="apple-touch-startup-image" href="./assets/icons/apple-launch-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="./assets/icons/apple-launch-750x1294.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="./assets/icons/apple-launch-1242x2148.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="./assets/icons/apple-launch-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="./assets/icons/apple-launch-1536x2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)">
+  
+  <!-- Windows Tiles -->
+  <meta name="msapplication-TileImage" content="./assets/icons/mstile-144x144.png">
+  <meta name="msapplication-square70x70logo" content="./assets/icons/mstile-70x70.png">
+  <meta name="msapplication-square150x150logo" content="./assets/icons/mstile-150x150.png">
+  <meta name="msapplication-wide310x150logo" content="./assets/icons/mstile-310x150.png">
+  <meta name="msapplication-square310x310logo" content="./assets/icons/mstile-310x310.png">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://hairsalon-pwa.com/">
+  
+  <!-- DNS Prefetch -->
+  <link rel="dns-prefetch" href="//fonts.googleapis.com">
+  <link rel="dns-prefetch" href="//fonts.gstatic.com">
+  <link rel="dns-prefetch" href="//accounts.google.com">
+  <link rel="dns-prefetch" href="//apis.google.com">
+  <link rel="dns-prefetch" href="//www.google-analytics.com">
+  
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://accounts.google.com">
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="./css/styles.css">
+  <link rel="stylesheet" href="./css/mobile-optimization.css">
+  
+  <!-- Critical CSS (Inline for performance) -->
+  <style>
+    /* Critical above-the-fold CSS */
+    :root {
+      --primary: #7c3aed;
+      --primary-dark: #5b21b6;
+      --secondary: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-900: #111827;
+      --white: #ffffff;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html {
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    body {
+      background-color: var(--gray-50);
+      color: var(--gray-900);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .loading-logo {
+      width: 80px;
+      height: 80px;
+      background: var(--white);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 24px;
+      animation: bounce 1s infinite;
+    }
+    
+    .loading-text {
+      color: var(--white);
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid var(--white);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes bounce {
+      0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
+      40%, 43% { transform: translateY(-10px); }
+      70% { transform: translateY(-5px); }
+      90% { transform: translateY(-2px); }
+    }
+    
+    /* Mobile-first responsive utilities */
+    .app-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .app-content {
+      flex: 1;
+      padding-bottom: 80px; /* Bottom nav space */
+    }
+    
+    @media (min-width: 768px) {
+      .app-content {
+        padding-bottom: 0;
+      }
+    }
+  </style>
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Hair Salon PWA",
+    "description": "Ứng dụng quản lý đơn hàng salon hiện đại với khả năng hoạt động offline",
+    "url": "https://hairsalon-pwa.com",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Any",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "VND"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "Hair Salon PWA Team"
+    },
+    "screenshot": "https://hairsalon-pwa.com/assets/images/screenshot.png"
+  }
+  </script>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="loading-screen" role="status" aria-label="Đang tải ứng dụng">
+    <div class="loading-logo">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+    </div>
+    <div class="loading-text">Hair Salon PWA</div>
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- App Container -->
+  <div id="app" class="app-container" role="main">
+    <!-- App Header -->
+    <header id="app-header" class="app-header" role="banner">
+      <div class="header-content">
+        <div class="header-left">
+          <button id="mobile-menu-toggle" class="mobile-menu-btn md:hidden" aria-label="Menu">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+          </button>
+          <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="logo-text">Hair Salon PWA</span>
+          </div>
+        </div>
+        
+        <div class="header-center hidden md:flex">
+          <nav class="desktop-nav" role="navigation" aria-label="Điều hướng chính">
+            <a href="#/dashboard" class="nav-link" data-route="dashboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="9"></rect>
+                <rect x="14" y="3" width="7" height="5"></rect>
+                <rect x="14" y="12" width="7" height="9"></rect>
+                <rect x="3" y="16" width="7" height="5"></rect>
+              </svg>
+              Dashboard
+            </a>
+            <a href="#/orders" class="nav-link" data-route="orders">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 11H5a2 2 0 00-2 2v7a2 2 0 002 2h4m4-9v9a2 2 0 01-2 2M9 7V3a2 2 0 012-2h2a2 2 0 012 2v4m3 4h4a2 2 0 012-2v-7a2 2 0 00-2-2h-4"></path>
+              </svg>
+              Đơn hàng
+            </a>
+            <a href="#/customers" class="nav-link" data-route="customers" data-guest-hide>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              Khách hàng
+            </a>
+            <a href="#/services" class="nav-link" data-route="services" data-guest-hide>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+              </svg>
+              Dịch vụ
+            </a>
+          </nav>
+        </div>
+        
+        <div class="header-right">
+          <div class="connection-status" id="connection-status">
+            <div class="status-indicator online" title="Trực tuyến"></div>
+          </div>
+          
+          <div class="user-menu" id="user-menu">
+            <button class="user-avatar-btn" id="user-avatar-btn" data-auth-show style="display: none;">
+              <img src="" alt="User Avatar" class="user-avatar" data-user-avatar>
+              <span class="user-name hidden md:inline" data-user-name>User</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden md:inline">
+                <polyline points="6,9 12,15 18,9"></polyline>
+              </svg>
+            </button>
+            
+            <button class="login-btn" id="login-btn" data-auth-hide>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4m-5-4l-3-3m0 0l3-3m-3 3h12"></path>
+              </svg>
+              <span class="hidden md:inline">Đăng nhập</span>
+            </button>
+            
+            <div class="user-dropdown" id="user-dropdown">
+              <div class="dropdown-content">
+                <div class="user-info">
+                  <img src="" alt="User Avatar" class="dropdown-avatar" data-user-avatar>
+                  <div class="user-details">
+                    <div class="user-name" data-user-name>User Name</div>
+                    <div class="user-email" data-user-email>user@example.com</div>
+                  </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a href="#/profile" class="dropdown-item" data-route="profile">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  Hồ sơ
+                </a>
+                <a href="#/settings" class="dropdown-item" data-route="settings" data-admin-show style="display: none;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+                  </svg>
+                  Cài đặt
+                </a>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item logout-btn" id="logout-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m7 14l5-5-5-5m5 5H9"></path>
+                  </svg>
+                  Đăng xuất
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <nav id="mobile-nav" class="mobile-nav md:hidden" role="navigation" aria-label="Điều hướng mobile">
+      <div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
+      <div class="mobile-nav-content">
+        <div class="mobile-nav-header">
+          <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Hair Salon PWA</span>
+          </div>
+          <button id="mobile-nav-close" class="mobile-nav-close" aria-label="Đóng menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="mobile-nav-body">
+          <div class="mobile-nav-user" data-auth-show style="display: none;">
+            <img src="" alt="User Avatar" class="mobile-user-avatar" data-user-avatar>
+            <div class="mobile-user-info">
+              <div class="mobile-user-name" data-user-name>User Name</div>
+              <div class="mobile-user-email" data-user-email>user@example.com</div>
+            </div>
+          </div>
+          
+          <div class="mobile-nav-links">
+            <a href="#/dashboard" class="mobile-nav-link" data-route="dashboard">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="9"></rect>
+                <rect x="14" y="3" width="7" height="5"></rect>
+                <rect x="14" y="12" width="7" height="9"></rect>
+                <rect x="3" y="16" width="7" height="5"></rect>
+              </svg>
+              Dashboard
+            </a>
+            <a href="#/orders" class="mobile-nav-link" data-route="orders">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 11H5a2 2 0 00-2 2v7a2 2 0 002 2h4m4-9v9a2 2 0 01-2 2M9 7V3a2 2 0 012-2h2a2 2 0 012 2v4m3 4h4a2 2 0 012-2v-7a2 2 0 00-2-2h-4"></path>
+              </svg>
+              Đơn hàng
+            </a>
+            <a href="#/customers" class="mobile-nav-link" data-route="customers" data-guest-hide>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              Khách hàng
+            </a>
+            <a href="#/services" class="mobile-nav-link" data-route="services" data-guest-hide>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+              </svg>
+              Dịch vụ
+            </a>
+            <a href="#/profile" class="mobile-nav-link" data-route="profile" data-auth-show style="display: none;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              Hồ sơ
+            </a>
+            <a href="#/settings" class="mobile-nav-link" data-route="settings" data-admin-show style="display: none;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+              </svg>
+              Cài đặt
+            </a>
+          </div>
+          
+          <div class="mobile-nav-footer">
+            <button class="mobile-login-btn" id="mobile-login-btn" data-auth-hide>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4m-5-4l-3-3m0 0l3-3m-3 3h12"></path>
+              </svg>
+              Đăng nhập
+            </button>
+            <button class="mobile-logout-btn" id="mobile-logout-btn" data-auth-show style="display: none;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4m7 14l5-5-5-5m5 5H9"></path>
+              </svg>
+              Đăng xuất
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app-content" class="app-content" role="main">
+      <!-- Dynamic content will be loaded here -->
+    </main>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <nav id="bottom-nav" class="bottom-nav md:hidden" role="navigation" aria-label="Điều hướng dưới">
+      <a href="#/dashboard" class="bottom-nav-item" data-route="dashboard">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="9"></rect>
+          <rect x="14" y="3" width="7" height="5"></rect>
+          <rect x="14" y="12" width="7" height="9"></rect>
+          <rect x="3" y="16" width="7" height="5"></rect>
+        </svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="#/orders" class="bottom-nav-item" data-route="orders">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 11H5a2 2 0 00-2 2v7a2 2 0 002 2h4m4-9v9a2 2 0 01-2 2M9 7V3a2 2 0 012-2h2a2 2 0 012 2v4m3 4h4a2 2 0 012-2v-7a2 2 0 00-2-2h-4"></path>
+        </svg>
+        <span>Đơn hàng</span>
+      </a>
+      <button class="bottom-nav-item bottom-nav-add" id="add-order-btn" data-guest-hide>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Tạo</span>
+      </button>
+      <a href="#/customers" class="bottom-nav-item" data-route="customers" data-guest-hide>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Khách hàng</span>
+      </a>
+      <a href="#/profile" class="bottom-nav-item" data-route="profile">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Hồ sơ</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- PWA Install Prompt -->
+  <div id="install-prompt" class="install-prompt" style="display: none;">
+    <div class="install-prompt-content">
+      <div class="install-prompt-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3"></path>
+        </svg>
+      </div>
+      <div class="install-prompt-text">
+        <div class="install-prompt-title">Cài đặt Hair Salon PWA</div>
+        <div class="install-prompt-desc">Thêm vào màn hình chính để truy cập nhanh</div>
+      </div>
+      <div class="install-prompt-actions">
+        <button id="install-btn" class="install-btn">Cài đặt</button>
+        <button id="install-dismiss" class="install-dismiss">Để sau</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notification-container" class="notification-container" role="region" aria-label="Thông báo" aria-live="polite"></div>
+
+  <!-- Offline Indicator -->
+  <div id="offline-indicator" class="offline-indicator" style="display: none;">
+    <div class="offline-indicator-content">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0119 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 015.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0122.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 014.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 016.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+      <span>Đang ngoại tuyến</span>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Critical inline JavaScript for immediate functionality
+    window.APP_CONFIG = {
+      version: '1.0.0',
+      apiUrl: window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://api.hairsalon-pwa.com',
+      googleClientId: window.location.hostname === 'localhost' ? 'YOUR_GOOGLE_CLIENT_ID_DEV' : 'YOUR_GOOGLE_CLIENT_ID_PROD',
+      environment: window.location.hostname === 'localhost' ? 'development' : 'production'
+    };
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((registration) => {
+            console.log('✅ Service Worker registered successfully:', registration.scope);
+            
+            // Listen for updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed') {
+                  if (navigator.serviceWorker.controller) {
+                    // New content is available
+                    showUpdateAvailableNotification();
+                  }
+                }
+              });
+            });
+          })
+          .catch((error) => {
+            console.error('❌ Service Worker registration failed:', error);
+          });
+      });
+    }
+
+    // Update available notification
+    function showUpdateAvailableNotification() {
+      if (window.NotificationService) {
+        window.NotificationService.info('Có bản cập nhật mới! Tải lại trang để cập nhật.', {
+          duration: 0, // Persistent
+          actions: [{
+            text: 'Cập nhật',
+            action: () => window.location.reload()
+          }, {
+            text: 'Để sau',
+            action: () => {}
+          }]
+        });
+      }
+    }
+
+    // Online/Offline Status
+    function updateConnectionStatus() {
+      const indicator = document.getElementById('connection-status');
+      const offlineIndicator = document.getElementById('offline-indicator');
+      const statusDot = indicator?.querySelector('.status-indicator');
+      
+      if (navigator.onLine) {
+        if (statusDot) {
+          statusDot.className = 'status-indicator online';
+          statusDot.title = 'Trực tuyến';
+        }
+        if (offlineIndicator) offlineIndicator.style.display = 'none';
+        document.body.classList.remove('offline');
+        
+        // Trigger data sync when back online
+        if (window.EventBus) {
+          window.EventBus.emit('network:online');
+        }
+      } else {
+        if (statusDot) {
+          statusDot.className = 'status-indicator offline';
+          statusDot.title = 'Ngoại tuyến';
+        }
+        if (offlineIndicator) offlineIndicator.style.display = 'flex';
+        document.body.classList.add('offline');
+        
+        if (window.EventBus) {
+          window.EventBus.emit('network:offline');
+        }
+      }
+    }
+
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+    updateConnectionStatus();
+
+    // PWA Install Prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      const installPrompt = document.getElementById('install-prompt');
+      const installBtn = document.getElementById('install-btn');
+      const dismissBtn = document.getElementById('install-dismiss');
+      
+      // Show install prompt after 5 seconds if not dismissed
+      setTimeout(() => {
+        const dismissed = localStorage.getItem('pwa_install_dismissed');
+        const lastDismissed = dismissed ? parseInt(dismissed) : 0;
+        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+        
+        if (lastDismissed < oneDayAgo) {
+          installPrompt.style.display = 'flex';
+        }
+      }, 5000);
+      
+      installBtn?.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`PWA install outcome: ${outcome}`);
+          
+          if (window.gtag) {
+            gtag('event', 'pwa_install_prompted', {
+              outcome: outcome
+            });
+          }
+          
+          deferredPrompt = null;
+          installPrompt.style.display = 'none';
+        }
+      });
+      
+      dismissBtn?.addEventListener('click', () => {
+        installPrompt.style.display = 'none';
+        localStorage.setItem('pwa_install_dismissed', Date.now().toString());
+      });
+    });
+
+    window.addEventListener('appinstalled', () => {
+      console.log('✅ PWA was installed');
+      const installPrompt = document.getElementById('install-prompt');
+      if (installPrompt) installPrompt.style.display = 'none';
+      
+      if (window.gtag) {
+        gtag('event', 'pwa_installed');
+      }
+    });
+
+    // Mobile Navigation
+    document.addEventListener('DOMContentLoaded', () => {
+      const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+      const mobileNav = document.getElementById('mobile-nav');
+      const mobileNavClose = document.getElementById('mobile-nav-close');
+      const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
+      
+      function openMobileNav() {
+        mobileNav?.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+      
+      function closeMobileNav() {
+        mobileNav?.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+      
+      mobileMenuToggle?.addEventListener('click', openMobileNav);
+      mobileNavClose?.addEventListener('click', closeMobileNav);
+      mobileNavOverlay?.addEventListener('click', closeMobileNav);
+      
+      // Close on route change
+      document.addEventListener('routechange', closeMobileNav);
+      
+      // Handle escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeMobileNav();
+        }
+      });
+    });
+
+    // Performance monitoring
+    window.addEventListener('load', () => {
+      if (window.performance && window.performance.timing) {
+        const perfData = window.performance.timing;
+        const loadTime = perfData.loadEventEnd - perfData.navigationStart;
+        console.log(`🚀 Page load time: ${loadTime}ms`);
+        
+        // Send to analytics if available
+        if (window.gtag && loadTime > 0) {
+          gtag('event', 'timing_complete', {
+            name: 'load',
+            value: loadTime
+          });
+        }
+      }
+      
+      // Web Vitals monitoring
+      if ('web-vital' in window) {
+        import('https://unpkg.com/web-vitals?module').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+          getCLS(console.log);
+          getFID(console.log);
+          getFCP(console.log);
+          getLCP(console.log);
+          getTTFB(console.log);
+        });
+      }
+    });
+
+    // Error handling
+    window.addEventListener('error', (error) => {
+      console.error('💥 Global error:', error.error);
+      
+      // Send to error tracking service
+      if (window.gtag) {
+        gtag('event', 'exception', {
+          description: error.error?.message || 'Unknown error',
+          fatal: false
+        });
+      }
+    });
+
+    window.addEventListener('unhandledrejection', (error) => {
+      console.error('💥 Unhandled promise rejection:', error.reason);
+      
+      if (window.gtag) {
+        gtag('event', 'exception', {
+          description: error.reason?.message || 'Unhandled promise rejection',
+          fatal: false
+        });
+      }
+    });
+
+    // Visibility change handling
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // App is hidden/minimized
+        if (window.EventBus) {
+          window.EventBus.emit('app:hidden');
+        }
+      } else {
+        // App is visible again
+        if (window.EventBus) {
+          window.EventBus.emit('app:visible');
+        }
+      }
+    });
+
+    // Battery status (if supported)
+    if ('getBattery' in navigator) {
+      navigator.getBattery().then((battery) => {
+        function updateBatteryStatus() {
+          console.log('Battery level: ' + battery.level * 100 + '%');
+          console.log('Battery charging: ' + battery.charging);
+        }
+        
+        battery.addEventListener('chargingchange', updateBatteryStatus);
+        battery.addEventListener('levelchange', updateBatteryStatus);
+        updateBatteryStatus();
+      });
+    }
+  </script>
+
+  <!-- App Scripts -->
+  <script type="module" src="./js/main.js"></script>
+  
+  <!-- Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'GA_MEASUREMENT_ID', {
+      page_title: document.title,
+      page_location: window.location.href,
+      custom_map: {
+        user_type: 'user_role'
+      }
+    });
+  </script>
+
+  <!-- No Script -->
+  <noscript>
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; z-index: 10000;">
+      <div>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" style="margin-bottom: 16px;">
+          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <h1 style="color: #7c3aed; margin-bottom: 16px; font-size: 24px; font-weight: bold;">Hair Salon PWA</h1>
+        <p style="color: #6b7280; margin-bottom: 16px; font-size: 16px;">Ứng dụng này yêu cầu JavaScript để hoạt động.</p>
+        <p style="color: #6b7280; font-size: 14px;">Vui lòng bật JavaScript trong trình duyệt của bạn và tải lại trang.</p>
+        <div style="margin-top: 24px;">
+          <button onclick="window.location.reload()" style="background: #7c3aed; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">
+            Tải lại trang
+          </button>
+        </div>
+      </div>
+    </div>
+  </noscript>
+</body>
+</html>
