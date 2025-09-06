@@ -95,12 +95,7 @@ button, [role="button"] {
     margin: 0 auto;
 }
 
-/* Improve fallback button for mobile */
-#loginBtn {
-    min-height: 44px;
-    padding: 12px 16px;
-    font-size: 16px; /* Prevent iOS zoom on focus */
-}
+/* Removed fallback manual login button styles (loginBtn) */
 
 /* Input focus effects */
 input:focus, 
