@@ -3,8 +3,8 @@
  * Handles statistics calculation and dashboard data
  */
 
-import { StorageService } from './storage.service.js';
-import { EventBus } from '../core/eventBus.js';
+import Storage from './storage.service.js';
+import EventBus from '../core/eventBus.js';
 
 export class StatsService {
   constructor() {
@@ -51,7 +51,7 @@ export class StatsService {
    * Calculate statistics from stored data
    */
   async calculateStats() {
-    const orders = await StorageService.get('orders') || [];
+    const orders = await Storage.getLocal('orders') || [];
     const today = new Date();
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const startOfWeek = new Date(today.getTime() - (today.getDay() * 24 * 60 * 60 * 1000));
@@ -75,7 +75,7 @@ export class StatsService {
     // Service statistics
     const serviceStats = this.calculateServiceStats(orders);
     
-    return {
+    const summary = {
       today: {
         orders: todayOrders.length,
         revenue: todayRevenue,
@@ -97,6 +97,15 @@ export class StatsService {
       },
       services: serviceStats,
       lastUpdated: Date.now()
+    };
+
+    // Backward compatible flat fields used by main.js dashboard
+    return {
+      ...summary,
+      todayOrders: summary.today.orders,
+      todayRevenue: summary.today.revenue,
+      pendingOrders: orders.filter(o => o.status === 'pending').length,
+      totalCustomers: new Set(orders.map(o => o.customerEmail || o.customerName)).size
     };
   }
 
@@ -137,7 +146,7 @@ export class StatsService {
    */
   async getRevenueTrend(days = 30) {
     try {
-      const orders = await StorageService.get('orders') || [];
+      const orders = await Storage.getLocal('orders') || [];
       const today = new Date();
       const trend = [];
 
@@ -171,7 +180,7 @@ export class StatsService {
    */
   async getHourlyStats() {
     try {
-      const orders = await StorageService.get('orders') || [];
+      const orders = await Storage.getLocal('orders') || [];
       const today = new Date();
       const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       

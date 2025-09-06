@@ -4,8 +4,8 @@
  */
 
 import { StorageService } from './storage.service.js';
-import { EventBus } from '../core/eventBus.js';
-import { Utils } from '../core/utils.js';
+import EventBus from '../core/eventBus.js';
+import Utils from '../core/utils.js';
 
 export class AuthService {
   constructor() {

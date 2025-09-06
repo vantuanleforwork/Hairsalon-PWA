@@ -3,10 +3,10 @@
  * Features: Filter, Search, Pagination, Sorting, Bulk actions
  */
 
-import { EventBus } from '../core/eventBus.js';
-import { Utils } from '../core/utils.js';
-import { NotificationService } from '../services/notification.service.js';
-import { OrderService } from '../services/order.service.js';
+import EventBus from '../core/eventBus.js';
+import Utils from '../core/utils.js';
+import NotificationService from '../services/notification.service.js';
+import OrderService from '../services/order.service.js';
 import { OrderForm } from './orderForm.js';
 
 export class OrderList {

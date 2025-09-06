@@ -1,9 +1,14 @@
 /**
  * API Service for Hair Salon Management System
  * Handles communication with Google Apps Script backend
- * 
+ *
  * @version 1.0.0
  */
+
+// Ensure config globals are available and import state manager for usage
+import '../core/config.js';
+import State from '../core/stateManager.js';
+import Auth from './auth.service.js';
 
 class ApiService {
   constructor() {
@@ -15,10 +20,18 @@ class ApiService {
     // Request interceptors
     this.requestInterceptors = [];
     this.responseInterceptors = [];
-    
-    console.log('🌐 API Service initialized');
   }
   
+  /**
+   * Optional runtime init to override defaults
+   */
+  init(options = {}) {
+    if (options.baseURL) this.baseUrl = options.baseURL;
+    if (options.timeout) this.defaultTimeout = options.timeout;
+    if (typeof options.retries === 'number') this.retryAttempts = options.retries;
+    if (typeof options.retryDelay === 'number') this.retryDelay = options.retryDelay;
+    return this;
+  }
   /**
    * Make HTTP request to Apps Script
    * @param {string} action - API action name
@@ -34,17 +47,16 @@ class ApiService {
     };
     
     try {
-      // Get current user for authentication
-      const user = State.get('user');
-      if (!user.isAuthenticated) {
-        throw new Error('User not authenticated');
-      }
-      
+      // Try to get current user/email from Auth or State; do not hard fail if absent
+      const stateUser = State.get('user') || {};
+      const email = (Auth?.currentUser?.email) || (stateUser.profile?.email) || stateUser.email || '';
+      const idToken = (Auth?.currentSession?.token) || stateUser.idToken || '';
+
       // Prepare request data
       const requestData = {
         action: action,
-        email: user.email,
-        idToken: user.idToken || '',
+        email: email,
+        idToken: idToken,
         data: JSON.stringify(data)
       };
       
@@ -96,8 +108,7 @@ class ApiService {
         // Wait before retry
         if (attempt < options.retries) {
           await this.delay(this.retryDelay * Math.pow(2, attempt)); // Exponential backoff
-          console.log(`🔄 Retrying request (attempt ${attempt + 2}/${options.retries + 1})`);
-        }
+          \n  \n  /**\n   * Optional runtime init to override defaults\n   */\n  init(options = {}) {\n    if (options.baseURL) this.baseUrl = options.baseURL;\n    if (options.timeout) this.defaultTimeout = options.timeout;\n    if (typeof options.retries === 'number') this.retryAttempts = options.retries;\n    if (typeof options.retryDelay === 'number') this.retryDelay = options.retryDelay;\n    return this;\n  }
       }
     }
     
@@ -409,7 +420,7 @@ class ApiService {
         
       case 0:
         // Network error - add to offline queue if supported
-        if (isFeatureEnabled('OFFLINE_MODE') && this.isOfflineCapable(action)) {
+        if (window.isFeatureEnabled && window.isFeatureEnabled('OFFLINE_MODE') && this.isOfflineCapable(action)) {
           State.addToOfflineQueue({
             action,
             data,
@@ -489,8 +500,7 @@ class ApiError extends Error {
  */
 function requestLoggingInterceptor(data) {
   if (CONFIG.DEV.ENABLE_LOGS && CONFIG.DEV.LOG_LEVEL === 'DEBUG') {
-    console.log('🚀 API Request:', data.action, data);
-  }
+    \n  \n  /**\n   * Optional runtime init to override defaults\n   */\n  init(options = {}) {\n    if (options.baseURL) this.baseUrl = options.baseURL;\n    if (options.timeout) this.defaultTimeout = options.timeout;\n    if (typeof options.retries === 'number') this.retryAttempts = options.retries;\n    if (typeof options.retryDelay === 'number') this.retryDelay = options.retryDelay;\n    return this;\n  }
   return data;
 }
 
@@ -499,8 +509,7 @@ function requestLoggingInterceptor(data) {
  */
 function responseLoggingInterceptor(response, action) {
   if (CONFIG.DEV.ENABLE_LOGS && CONFIG.DEV.LOG_LEVEL === 'DEBUG') {
-    console.log('📥 API Response:', action, response);
-  }
+    \n  \n  /**\n   * Optional runtime init to override defaults\n   */\n  init(options = {}) {\n    if (options.baseURL) this.baseUrl = options.baseURL;\n    if (options.timeout) this.defaultTimeout = options.timeout;\n    if (typeof options.retries === 'number') this.retryAttempts = options.retries;\n    if (typeof options.retryDelay === 'number') this.retryDelay = options.retryDelay;\n    return this;\n  }
   return response;
 }
 
@@ -517,8 +526,7 @@ function performanceResponseInterceptor(response, action, requestData) {
     const duration = performance.now() - requestData._requestStart;
     
     if (CONFIG.DEV.SHOW_PERFORMANCE) {
-      console.log(`⏱️ API ${action}: ${duration.toFixed(2)}ms`);
-    }
+      \n  \n  /**\n   * Optional runtime init to override defaults\n   */\n  init(options = {}) {\n    if (options.baseURL) this.baseUrl = options.baseURL;\n    if (options.timeout) this.defaultTimeout = options.timeout;\n    if (typeof options.retries === 'number') this.retryAttempts = options.retries;\n    if (typeof options.retryDelay === 'number') this.retryDelay = options.retryDelay;\n    return this;\n  }
     
     // Log slow requests
     if (duration > 5000) {
@@ -548,9 +556,14 @@ if (CONFIG.DEV.SHOW_PERFORMANCE) {
 window.API = API;
 window.ApiError = ApiError;
 
+// ESM exports
+export { ApiService, ApiError };
+export default API;
+
 // Export for modules
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { API, ApiError };
 }
 
 console.log('🌐 API Service ready');
+

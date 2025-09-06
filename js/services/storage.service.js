@@ -21,6 +21,20 @@ class StorageService {
     
     console.log('💾 Storage Service initialized');
   }
+
+  // =============  SIMPLE KEY/VALUE COMPAT LAYER =============
+  // Provide simple get/set/remove to match existing call sites
+  async get(key, defaultValue = null) {
+    return this.getLocal(key, defaultValue);
+  }
+
+  async set(key, value) {
+    return this.setLocal(key, value);
+  }
+
+  async remove(key) {
+    return this.removeLocal(key);
+  }
   
   /**
    * Initialize IndexedDB
@@ -728,7 +742,11 @@ if (document.readyState === 'loading') {
 // Make available globally
 window.Storage = Storage;
 
-// Export for modules
+// Export for ESM consumers
+export { StorageService };
+export default Storage;
+
+// Export for CommonJS (optional environments)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = Storage;
 }

@@ -10,18 +10,19 @@
  * - Error handling and recovery
  */
 
-import { EventBus } from './core/eventBus.js';
-import { Utils } from './core/utils.js';
-import { StateManager } from './core/stateManager.js';
-import { ValidationManager } from './core/validation.js';
+import EventBus from './core/eventBus.js';
+import Utils from './core/utils.js';
+import State from './core/stateManager.js';
+import Validation from './core/validation.js';
+import './core/config.js';
 
 // Services
-import { APIService } from './services/api.service.js';
-import { OrderService } from './services/order.service.js';
-import { StatsService } from './services/stats.service.js';
-import { NotificationService } from './services/notification.service.js';
-import { AuthService } from './services/auth.service.js';
-import { StorageService } from './services/storage.service.js';
+import API from './services/api.service.js';
+import OrderService from './services/order.service.js';
+import StatsService from './services/stats.service.js';
+import NotificationService from './services/notification.service.js';
+import Auth from './services/auth.service.js';
+import Storage from './services/storage.service.js';
 
 // Components
 import { OrderForm } from './components/orderForm.js';
@@ -168,17 +169,17 @@ export class HairSalonApp {
     console.log('⚙️ Initializing core systems...');
     
     // Initialize state manager
-    StateManager.init();
+    State.init();
     
     // Initialize storage service
-    await StorageService.init();
+    await Storage.init();
     
     // Load app configuration
     await this.loadConfiguration();
     
     // Initialize API service
-    APIService.init({
-      baseURL: this.config.apiBaseUrl,
+    API.init({
+      baseURL: (typeof CONFIG !== 'undefined' && CONFIG.APPS_SCRIPT_URL) ? CONFIG.APPS_SCRIPT_URL : this.config.apiBaseUrl,
       timeout: 10000
     });
     
@@ -201,12 +202,10 @@ export class HairSalonApp {
     
     try {
       // Initialize auth service
-      await AuthService.init();
+      await Auth.validateCurrentSession();
       
       // Check for existing session
-      const session = await AuthService.getSession();
-      if (session && session.user) {
-        this.user = session.user;
+      if (Auth.isAuthenticated && Auth.currentUser) {\n        this.user = Auth.currentUser;
         console.log('👤 User session found:', this.user.name);
       }
       
@@ -225,7 +224,7 @@ export class HairSalonApp {
     // Register service worker
     if ('serviceWorker' in navigator) {
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
+        const registration = await navigator.serviceWorker.register('./sw.js');
         console.log('✅ Service Worker registered:', registration);
         
         // Handle updates
@@ -1079,10 +1078,15 @@ export class HairSalonApp {
   }
 
   hideLoadingState() {
+    // Hide in-app loading overlay
     const loading = document.getElementById('app-loading');
     const mainLayout = document.getElementById('main-layout');
     if (loading) loading.classList.add('hidden');
     if (mainLayout) mainLayout.classList.remove('hidden');
+
+    // Also hide the initial page loader defined in index.html
+    const initialLoader = document.getElementById('loading-screen');
+    if (initialLoader) initialLoader.classList.add('hidden');
   }
 
   getInitialRoute() {
@@ -1100,7 +1104,7 @@ export class HairSalonApp {
 
   async loadConfiguration() {
     try {
-      const config = await StorageService.get('app_config');
+      const config = await Storage.getLocal('app_config');
       if (config) {
         this.config = { ...this.config, ...config };
       }
@@ -1304,3 +1308,5 @@ if (document.readyState === 'loading') {
 } else {
   app.init();
 }
+
+

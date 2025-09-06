@@ -139,6 +139,13 @@ const Utils = {
   formatCurrency(amount) {
     return formatCurrency(amount); // Use global function from config
   },
+
+  /**
+   * Format date-time (shortcut used across app)
+   */
+  formatDateTime(date) {
+    return this.formatDate(date, 'datetime');
+  },
   
   /**
    * Parse currency (already available in config)
@@ -608,7 +615,8 @@ const Utils = {
 
 // =============  GLOBAL EXPORTS =============
 
-// Make Utils available globally
+// Make Utils available both as ESM and global
+export default Utils;
 window.Utils = Utils;
 
 // Export for modules

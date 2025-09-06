@@ -3,7 +3,7 @@
  * Handles all notification types: success, error, warning, info
  */
 
-import { EventBus } from '../core/eventBus.js';
+import EventBus from '../core/eventBus.js';
 
 export class NotificationService {
   constructor() {

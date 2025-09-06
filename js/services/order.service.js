@@ -10,10 +10,13 @@
  * - Statistics
  */
 
-import { EventBus } from '../core/eventBus.js';
-import { Utils } from '../core/utils.js';
-import { APIService } from './api.service.js';
-import { StorageService } from './storage.service.js';
+import EventBus from '../core/eventBus.js';
+import Utils from '../core/utils.js';
+import API from './api.service.js';
+import Storage from './storage.service.js';
+// Maintain compatibility with existing references in this file
+const APIService = API;
+const StorageService = Storage;
 import NotificationService from './notification.service.js';
 
 export class OrderService {
@@ -22,6 +25,22 @@ export class OrderService {
     this.isOnline = navigator.onLine;
     this.pendingSync = new Set();
     this.init();
+  }
+
+  /**
+   * Get recent N orders sorted by createdAt desc
+   */
+  async getRecentOrders(limit = 5) {
+    try {
+      const ordersArray = Array.from(this.orders.values());
+      const sorted = ordersArray
+        .slice()
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return sorted.slice(0, limit);
+    } catch (error) {
+      console.error('OrderService: getRecentOrders failed:', error);
+      return [];
+    }
   }
 
   async init() {
@@ -98,7 +117,8 @@ export class OrderService {
    */
   async syncWithServer() {
     try {
-      const serverOrders = await APIService.get('/orders');
+      const response = await APIService.getOrders({});
+      const serverOrders = (response && response.data) ? response.data : (response || []);
       
       serverOrders.forEach(order => {
         this.orders.set(order.id, order);
@@ -142,13 +162,13 @@ export class OrderService {
   async executePendingOperation(operation) {
     switch (operation.type) {
       case 'CREATE':
-        await APIService.post('/orders', operation.data);
+        await APIService.createOrder(operation.data);
         break;
       case 'UPDATE':
-        await APIService.put(`/orders/${operation.id}`, operation.data);
+        await APIService.updateOrder(operation.id, operation.data);
         break;
       case 'DELETE':
-        await APIService.delete(`/orders/${operation.id}`);
+        await APIService.deleteOrder(operation.id);
         break;
     }
   }
@@ -194,7 +214,8 @@ export class OrderService {
       // Sync with server if online
       if (this.isOnline) {
         try {
-          const serverOrder = await APIService.post('/orders', order);
+          const resp = await APIService.createOrder(order);
+          const serverOrder = resp?.data || order;
           // Update with server response
           this.orders.set(order.id, serverOrder);
           await this.saveCachedOrders();
