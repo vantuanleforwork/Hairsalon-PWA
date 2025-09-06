@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="vi" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Không có kết nối - Hair Salon PWA</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    :root {
+      --primary: #7c3aed;
+      --primary-dark: #5b21b6;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-600: #4b5563;
+      --gray-900: #111827;
+      --white: #ffffff;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    html {
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-text-size-adjust: 100%;
+    }
+    
+    body {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .offline-container {
+      background: var(--white);
+      color: var(--gray-900);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+    
+    .offline-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.5rem;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .offline-icon svg {
+      width: 32px;
+      height: 32px;
+      color: var(--gray-600);
+    }
+    
+    .offline-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 0.5rem;
+    }
+    
+    .offline-message {
+      color: var(--gray-600);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    
+    .retry-btn {
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .retry-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+    
+    .retry-btn:active {
+      transform: translateY(0);
+    }
+    
+    .features-list {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--gray-100);
+    }
+    
+    .features-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--gray-900);
+    }
+    
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      color: var(--gray-600);
+      font-size: 0.875rem;
+    }
+    
+    .feature-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    
+    .status-indicator {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 12px;
+      height: 12px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    .online .status-indicator {
+      background: #10b981;
+      animation: none;
+    }
+    
+    @media (max-width: 480px) {
+      .offline-container {
+        padding: 1.5rem;
+        margin: 1rem;
+      }
+      
+      .offline-title {
+        font-size: 1.25rem;
+      }
+      
+      .offline-message {
+        font-size: 0.875rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-container">
+    <div class="status-indicator" id="status-indicator"></div>
+    
+    <div class="offline-icon">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728M12 5v.01M12 19v.01"></path>
+      </svg>
+    </div>
+    
+    <h1 class="offline-title" id="page-title">Không có kết nối</h1>
+    
+    <p class="offline-message" id="page-message">
+      Bạn hiện đang ngoại tuyến. Vui lòng kiểm tra kết nối mạng và thử lại.
+    </p>
+    
+    <button class="retry-btn" id="retry-btn">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+      Thử lại
+    </button>
+    
+    <div class="features-list">
+      <h3 class="features-title">Tính năng có sẵn offline:</h3>
+      
+      <div class="feature-item">
+        <svg class="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>Xem dữ liệu đã lưu trữ</span>
+      </div>
+      
+      <div class="feature-item">
+        <svg class="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+        </svg>
+        <span>Tạo và chỉnh sửa đơn hàng nháp</span>
+      </div>
+      
+      <div class="feature-item">
+        <svg class="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+        <span>Xem thống kê đã lưu</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check online status
+    function updateStatus() {
+      const indicator = document.getElementById('status-indicator');
+      const title = document.getElementById('page-title');
+      const message = document.getElementById('page-message');
+      const retryBtn = document.getElementById('retry-btn');
+      
+      if (navigator.onLine) {
+        document.body.classList.add('online');
+        title.textContent = 'Đã khôi phục kết nối';
+        message.textContent = 'Kết nối mạng đã được khôi phục. Bạn có thể trở lại ứng dụng.';
+        retryBtn.textContent = 'Quay lại ứng dụng';
+        retryBtn.innerHTML = `
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Quay lại ứng dụng
+        `;
+      } else {
+        document.body.classList.remove('online');
+        title.textContent = 'Không có kết nối';
+        message.textContent = 'Bạn hiện đang ngoại tuyến. Vui lòng kiểm tra kết nối mạng và thử lại.';
+        retryBtn.innerHTML = `
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Thử lại
+        `;
+      }
+    }
+    
+    // Listen for online/offline events
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+    updateStatus();
+    
+    // Retry button functionality
+    document.getElementById('retry-btn').addEventListener('click', () => {
+      if (navigator.onLine) {
+        // Go back to the app
+        window.history.back();
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
+      } else {
+        // Check connection and reload
+        window.location.reload();
+      }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        document.getElementById('retry-btn').click();
+      }
+    });
+    
+    // Auto-redirect when back online
+    let onlineTimeout;
+    window.addEventListener('online', () => {
+      clearTimeout(onlineTimeout);
+      onlineTimeout = setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    });
+  </script>
+</body>
+</html>

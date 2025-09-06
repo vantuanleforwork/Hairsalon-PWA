@@ -42,26 +42,9 @@
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#7c3aed">
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#5b21b6">
   
-  <!-- Security Headers -->
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.googletagmanager.com https://www.google-analytics.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    font-src 'self' https://fonts.gstatic.com data:;
-    img-src 'self' data: blob: https: http:;
-    connect-src 'self' https://accounts.google.com https://www.googleapis.com https://www.google-analytics.com https://analytics.google.com wss: ws:;
-    media-src 'self' data: blob:;
-    object-src 'none';
-    base-uri 'self';
-    form-action 'self';
-    frame-ancestors 'none';
-    upgrade-insecure-requests;
-  ">
+  <!-- Security Headers (Note: These should ideally be set by the server) -->
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="X-Frame-Options" content="DENY">
-  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
   
   <!-- Manifest -->
   <link rel="manifest" href="./manifest.json">
@@ -110,7 +93,7 @@
   
   <!-- Stylesheets -->
   <link rel="stylesheet" href="./css/styles.css">
-  <link rel="stylesheet" href="./css/mobile-optimization.css">
+  <link rel="stylesheet" href="./css/mobile.css">
   
   <!-- Critical CSS (Inline for performance) -->
   <style>
@@ -733,19 +716,28 @@
 
     // Performance monitoring
     window.addEventListener('load', () => {
-      if (window.performance && window.performance.timing) {
-        const perfData = window.performance.timing;
-        const loadTime = perfData.loadEventEnd - perfData.navigationStart;
-        console.log(`🚀 Page load time: ${loadTime}ms`);
-        
-        // Send to analytics if available
-        if (window.gtag && loadTime > 0) {
-          gtag('event', 'timing_complete', {
-            name: 'load',
-            value: loadTime
-          });
+      // Wait a bit to ensure all timing data is available
+      setTimeout(() => {
+        if (window.performance && window.performance.timing) {
+          const perfData = window.performance.timing;
+          // Only calculate load time if both values are valid and loadEventEnd > 0
+          if (perfData.loadEventEnd > 0 && perfData.navigationStart > 0) {
+            const loadTime = perfData.loadEventEnd - perfData.navigationStart;
+            if (loadTime > 0) {
+              console.log(`🚀 Page load time: ${loadTime}ms`);
+              
+              // Send to analytics if available
+              if (window.gtag) {
+                gtag('event', 'timing_complete', {
+                  name: 'load',
+                  value: loadTime
+                });
+              }
+            }
+          }
         }
-      }
+      }, 100);
+      
       
       // Web Vitals monitoring
       if ('web-vital' in window) {
