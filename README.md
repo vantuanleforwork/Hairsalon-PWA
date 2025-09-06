@@ -17,10 +17,16 @@ Bạn có thể test ngay bằng cách mở file `index.html` trong trình duy�
 - ✅ Lưu dữ liệu local (localStorage)
 - ✅ Mock authentication để test
 
+### Đã hoàn thành (Phase 2)
+- ✅ Google Sheets integration
+- ✅ Google Apps Script API backend
+- ✅ CRUD operations (Create, Read, Update, Delete)
+- ✅ Real-time statistics from Sheets
+- ✅ API test tool
+
 ### Sắp tới
-- ⏳ Google Sheets integration (Phase 2)
 - ⏳ Google OAuth authentication (Phase 3)
-- ⏳ API backend với Google Apps Script (Phase 4)
+- ⏳ Tích hợp Frontend với Backend (Phase 4)
 - ⏳ PWA với offline support (Phase 5)
 - ⏳ Deploy lên GitHub Pages (Phase 6)
 
