@@ -85,7 +85,9 @@ Thêm các URLs (QUAN TRỌNG - PHẢI CHÍNH XÁC):
 ### 4.4 Authorized Redirect URIs
 Thêm các URLs:
 - `http://localhost:5500/` (cho development)
-- `https://yourusername.github.io/salon-app/` (cho production)
+- `http://127.0.0.1:5500/` (cho development)
+- `https://vantuanleforwork.github.io/` (cho production - thêy bằng GitHub username thật)
+- `https://vantuanleforwork.github.io/Hairsalon-PWA/` (nếu deploy trong subfolder)
 
 ### 4.5 Lưu Client ID
 1. Click **Create**

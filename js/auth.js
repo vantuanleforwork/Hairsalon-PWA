@@ -94,12 +94,14 @@ async function initAuth(callbacks = {}) {
 
 /**
  * Handle Google Identity Services credential response
+ * This function is called by Google OAuth when user completes login
  */
 function handleCredentialResponse(response) {
-    console.log('Google auth response received');
+    console.log('🔐 Google OAuth response received');
     
     if (!response || !response.credential) {
-        AUTH.onLoginError('No credential received');
+        console.error('❌ No credential received');
+        if (AUTH.onLoginError) AUTH.onLoginError('No credential received');
         return;
     }
     
@@ -107,6 +109,8 @@ function handleCredentialResponse(response) {
         // Parse JWT token from Google
         const token = response.credential;
         const payload = parseJwt(token);
+        
+        console.log('✅ JWT parsed, user email:', payload.email);
         
         // Create user object
         const user = {
@@ -122,8 +126,15 @@ function handleCredentialResponse(response) {
         
         // Check if email is allowed
         if (!isAllowedEmail(user.email)) {
-            console.warn('Email not allowed:', user.email);
-            AUTH.onLoginError(`Email ${user.email} không được phép truy cập ứng dụng. Liên hệ admin.`);
+            console.warn('❌ Email not allowed:', user.email);
+            const errorMsg = `Email ${user.email} không được phép truy cập ứng dụng. Liên hệ admin.`;
+            if (AUTH.onLoginError) {
+                AUTH.onLoginError(errorMsg);
+            } else if (window.showToast) {
+                window.showToast(errorMsg, 'error');
+            } else {
+                alert(errorMsg);
+            }
             return;
         }
         
@@ -132,12 +143,37 @@ function handleCredentialResponse(response) {
         AUTH.accessToken = token;
         localStorage.setItem('user', JSON.stringify(user));
         
-        // Callback
-        AUTH.onLoginSuccess(user);
+        console.log('✅ User authenticated successfully:', user.name);
+        
+        // Callback - try multiple ways to ensure it works
+        if (AUTH.onLoginSuccess) {
+            AUTH.onLoginSuccess(user);
+        } else if (window.handleAuthSuccess) {
+            window.handleAuthSuccess(user);
+        } else {
+            // Direct fallback
+            console.log('📢 Calling direct login success');
+            if (window.APP_STATE) {
+                window.APP_STATE.user = user;
+            }
+            if (window.showMainApp) {
+                window.showMainApp();
+            }
+            if (window.showToast) {
+                window.showToast(`Xin chào ${user.name || user.email}!`, 'success');
+            }
+        }
         
     } catch (error) {
-        console.error('Error processing auth response:', error);
-        AUTH.onLoginError('Lỗi xác thực. Vui lòng thử lại.');
+        console.error('❌ Error processing auth response:', error);
+        const errorMsg = 'Lỗi xác thực. Vui lòng thử lại.';
+        if (AUTH.onLoginError) {
+            AUTH.onLoginError(errorMsg);
+        } else if (window.showToast) {
+            window.showToast(errorMsg, 'error');
+        } else {
+            alert(errorMsg);
+        }
     }
 }
 

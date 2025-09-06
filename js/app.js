@@ -495,12 +495,13 @@ function showLoginScreen() {
     }, 1000);
 }
 
-// Render Google OAuth button
+// Render Google OAuth button with better mobile support
 function renderGoogleLoginButton() {
+    console.log('🔄 Attempting to render Google OAuth button...');
+    
     if (typeof google === 'undefined' || !google.accounts) {
-        console.warn('Google Identity Services not loaded yet');
-        // Show fallback button
-        elements.loginBtn.style.display = 'flex';
+        console.warn('⚠️ Google Identity Services not loaded, showing fallback');
+        showFallbackButton();
         return;
     }
     
@@ -508,26 +509,27 @@ function renderGoogleLoginButton() {
     if (typeof APP_CONFIG === 'undefined' || 
         !APP_CONFIG.GOOGLE_CLIENT_ID || 
         APP_CONFIG.GOOGLE_CLIENT_ID.includes('DEMO_CLIENT_ID')) {
-        console.warn('No valid Google Client ID, showing fallback');
-        elements.loginBtn.style.display = 'flex';
+        console.warn('⚠️ No valid Google Client ID, showing fallback');
+        showFallbackButton();
         return;
     }
     
     try {
-        // Initialize Google OAuth if not done
+        console.log('🔧 Initializing Google OAuth with Client ID:', APP_CONFIG.GOOGLE_CLIENT_ID.substring(0, 20) + '...');
+        
+        // Initialize Google OAuth
         google.accounts.id.initialize({
             client_id: APP_CONFIG.GOOGLE_CLIENT_ID,
-            callback: (response) => {
-                // Handle login response
-                if (typeof AUTH !== 'undefined') {
-                    AUTH.handleCredentialResponse?.(response);
-                } else {
-                    handleGoogleResponse(response);
-                }
-            }
+            callback: handleCredentialResponse, // Direct reference
+            auto_select: false, // Disable auto-select for better UX
+            cancel_on_tap_outside: false, // Don't cancel on mobile tap outside
+            use_fedcm_for_prompt: false // Disable FedCM for compatibility
         });
         
-        // Render Google button
+        // Clear container first
+        elements.googleLoginContainer.innerHTML = '';
+        
+        // Render Google button with mobile-optimized settings
         google.accounts.id.renderButton(elements.googleLoginContainer, {
             type: 'standard',
             size: 'large',
@@ -535,19 +537,51 @@ function renderGoogleLoginButton() {
             shape: 'rectangular',
             logo_alignment: 'left',
             theme: 'outline',
-            width: '100%'
+            locale: 'vi',
+            click_listener: () => {
+                console.log('📱 Google button clicked (mobile)');
+                // Trigger One Tap if direct button click fails
+                setTimeout(() => {
+                    google.accounts.id.prompt();
+                }, 100);
+            }
         });
         
         // Hide fallback button
         elements.loginBtn.style.display = 'none';
         
-        console.log('Google OAuth button rendered');
+        console.log('✅ Google OAuth button rendered successfully');
+        
+        // Add mobile touch event listeners
+        const googleBtn = elements.googleLoginContainer.querySelector('div[role="button"]');
+        if (googleBtn) {
+            googleBtn.style.cursor = 'pointer';
+            googleBtn.style.touchAction = 'manipulation'; // Prevent double-tap zoom
+            
+            // Add mobile-friendly touch events
+            googleBtn.addEventListener('touchstart', (e) => {
+                console.log('📱 Touch start on Google button');
+                googleBtn.style.opacity = '0.8';
+            });
+            
+            googleBtn.addEventListener('touchend', (e) => {
+                googleBtn.style.opacity = '1';
+            });
+        }
         
     } catch (error) {
-        console.error('Error rendering Google button:', error);
-        // Show fallback button
-        elements.loginBtn.style.display = 'flex';
+        console.error('❌ Error rendering Google button:', error);
+        showFallbackButton();
     }
+}
+
+// Show fallback button with improved mobile support
+function showFallbackButton() {
+    elements.loginBtn.style.display = 'flex';
+    elements.loginBtn.style.touchAction = 'manipulation';
+    elements.googleLoginContainer.innerHTML = '';
+    
+    console.log('🔄 Showing fallback login button');
 }
 
 // Handle Google OAuth response (fallback)
@@ -596,6 +630,27 @@ function handleGoogleResponse(response) {
         showToast('Lỗi xử lý đăng nhập. Vui lòng thử lại.', 'error');
     }
 }
+
+// Global handleCredentialResponse for Google OAuth callback
+window.handleCredentialResponse = function(response) {
+    console.log('🌍 Global OAuth callback triggered');
+    
+    // Try AUTH module first
+    if (typeof AUTH !== 'undefined' && AUTH.handleCredentialResponse) {
+        return AUTH.handleCredentialResponse(response);
+    }
+    
+    // Fallback to local handling
+    return handleGoogleResponse(response);
+};
+
+// Global auth success handler
+window.handleAuthSuccess = function(user) {
+    console.log('✅ Global auth success:', user.email);
+    APP_STATE.user = user;
+    showMainApp();
+    showToast(`Xin chào ${user.name || user.email}!`, 'success');
+};
 
 // Parse JWT token
 function parseJwt(token) {
