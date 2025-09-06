@@ -16,7 +16,8 @@ window.initAuth = function(callbacks = {}) {
     // Store callbacks globally
     window.authCallbacks = callbacks;
     
-    // Check for existing user
+    // Check for existing user - DISABLED for testing fresh login
+    /*
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
         try {
@@ -38,32 +39,32 @@ window.initAuth = function(callbacks = {}) {
             localStorage.removeItem('user');
         }
     }
+    */
     
     console.log('📝 No valid saved user found');
 };
 
-// Simple login function
+// Google login function - REAL OAUTH ONLY
 window.loginWithGoogle = function() {
-    console.log('🚀 Starting Google login...');
+    console.log('🚀 Starting Google OAuth login...');
     
-    // Check if Google is available
+    // Check if Google API is loaded
     if (typeof google === 'undefined' || !google.accounts) {
-        console.warn('⚠️ Google not available, using mock login');
-        mockLogin();
+        console.error('❌ Google Identity Services not loaded!');
+        alert('Google login không khả dụng. Vui lòng refresh trang.');
         return;
     }
     
-    // Check if we have client ID
-    if (!window.APP_CONFIG || !window.APP_CONFIG.GOOGLE_CLIENT_ID || 
-        window.APP_CONFIG.GOOGLE_CLIENT_ID.includes('DEMO_ID')) {  // Fixed: check for DEMO_ID not DEMO
-        console.warn('⚠️ No valid client ID, using mock login');
-        mockLogin();
+    // Check client ID
+    if (!window.APP_CONFIG || !window.APP_CONFIG.GOOGLE_CLIENT_ID) {
+        console.error('❌ No Google Client ID configured!');
+        alert('OAuth chưa được cấu hình. Liên hệ admin.');
         return;
     }
+    
+    console.log('⚙️ Initializing Google OAuth...');
     
     try {
-        console.log('⚙️ Initializing Google OAuth with Client ID:', window.APP_CONFIG.GOOGLE_CLIENT_ID.substring(0, 20) + '...');
-        
         // Initialize Google OAuth
         google.accounts.id.initialize({
             client_id: window.APP_CONFIG.GOOGLE_CLIENT_ID,
@@ -72,55 +73,56 @@ window.loginWithGoogle = function() {
             cancel_on_tap_outside: false
         });
         
-        // Try popup flow first (more reliable than One Tap)
-        try {
-            // Create a temporary button for popup
-            const tempDiv = document.createElement('div');
-            tempDiv.style.display = 'none';
-            document.body.appendChild(tempDiv);
-            
-            google.accounts.id.renderButton(tempDiv, {
-                theme: 'outline',
-                size: 'large',
-                type: 'standard'
-            });
-            
-            // Trigger the button click
-            setTimeout(() => {
-                const button = tempDiv.querySelector('div[role="button"]');
-                if (button) {
-                    button.click();
-                } else {
-                    // Fallback to One Tap if button render fails
-                    console.log('🔄 Button render failed, trying One Tap...');
-                    google.accounts.id.prompt((notification) => {
-                        if (notification.isNotDisplayed()) {
-                            console.log('⚠️ One Tap not displayed, creating custom popup');
-                            // If One Tap also fails, create a custom popup
-                            createCustomOAuthPopup();
-                        }
-                    });
-                }
-                document.body.removeChild(tempDiv);
-            }, 100);
-            
-        } catch (buttonError) {
-            console.log('⚠️ Button render failed, trying One Tap:', buttonError.message);
-            // Fallback to One Tap
-            google.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed()) {
-                    console.log('⚠️ One Tap not displayed, using custom popup');
-                    createCustomOAuthPopup();
-                }
-            });
-        }
+        // Show the One Tap prompt
+        google.accounts.id.prompt((notification) => {
+            if (notification.isNotDisplayed()) {
+                console.log('⚠️ One Tap not displayed:', notification.getNotDisplayedReason());
+                // Force show popup by creating button and clicking it
+                showGoogleLoginPopup();
+            }
+        });
         
     } catch (error) {
-        console.error('❌ Google login error:', error);
-        console.log('🎭 Falling back to mock login due to OAuth error');
-        mockLogin();
+        console.error('❌ Google OAuth initialization error:', error);
+        alert('Lỗi khởi tạo Google OAuth: ' + error.message);
     }
 };
+
+// Show Google login popup
+function showGoogleLoginPopup() {
+    try {
+        // Create temporary div for Google button
+        const buttonDiv = document.createElement('div');
+        buttonDiv.style.position = 'fixed';
+        buttonDiv.style.top = '-1000px'; // Hide off-screen
+        document.body.appendChild(buttonDiv);
+        
+        // Render Google button
+        google.accounts.id.renderButton(buttonDiv, {
+            theme: 'outline',
+            size: 'large',
+            type: 'standard',
+            width: '200'
+        });
+        
+        // Auto-click the button to trigger popup
+        setTimeout(() => {
+            const googleBtn = buttonDiv.querySelector('[role="button"]');
+            if (googleBtn) {
+                googleBtn.click();
+            } else {
+                console.error('❌ Could not find Google button to click');
+                alert('Không thể tạo popup đăng nhập. Thử lại sau.');
+            }
+            // Clean up
+            document.body.removeChild(buttonDiv);
+        }, 100);
+        
+    } catch (error) {
+        console.error('❌ Error creating Google popup:', error);
+        alert('Lỗi tạo popup Google: ' + error.message);
+    }
+}
 
 // Google OAuth callback
 window.handleGoogleCallback = function(response) {
@@ -220,77 +222,6 @@ function parseJWT(token) {
     }
 }
 
-// Custom OAuth popup for fallback
-function createCustomOAuthPopup() {
-    console.log('📱 Creating custom OAuth popup...');
-    
-    try {
-        // Create OAuth URL
-        const oauthUrl = `https://accounts.google.com/oauth/authorize?` +
-            `client_id=${encodeURIComponent(window.APP_CONFIG.GOOGLE_CLIENT_ID)}&` +
-            `redirect_uri=${encodeURIComponent(window.location.origin)}&` +
-            `response_type=id_token&` +
-            `scope=openid email profile&` +
-            `nonce=${Date.now()}`;
-        
-        // Open popup
-        const popup = window.open(
-            oauthUrl,
-            'googleOAuth',
-            'width=500,height=600,scrollbars=yes,resizable=yes'
-        );
-        
-        if (popup) {
-            console.log('✅ OAuth popup opened');
-            
-            // Check for popup closure
-            const checkClosed = setInterval(() => {
-                if (popup.closed) {
-                    clearInterval(checkClosed);
-                    console.log('⚠️ OAuth popup closed without completing login');
-                    // Don't auto-fallback to mock - let user try again
-                }
-            }, 1000);
-            
-            // Auto-close popup after 60 seconds
-            setTimeout(() => {
-                if (!popup.closed) {
-                    popup.close();
-                    clearInterval(checkClosed);
-                    console.log('⏰ OAuth popup timed out');
-                }
-            }, 60000);
-        } else {
-            throw new Error('Popup blocked by browser');
-        }
-        
-    } catch (error) {
-        console.error('❌ Custom OAuth popup failed:', error);
-        console.log('🎭 Falling back to mock login');
-        mockLogin();
-    }
-}
-
-// Mock login for development
-function mockLogin() {
-    console.log('🎭 Using mock login');
-    
-    const mockUser = {
-        id: 'mock-123',
-        email: 'demo@salon.com',
-        name: 'Demo User',
-        picture: null,
-        token: 'mock-token'
-    };
-    
-    window.AUTH_STATE.user = mockUser;
-    window.AUTH_STATE.isLoggedIn = true;
-    localStorage.setItem('user', JSON.stringify(mockUser));
-    
-    if (window.authCallbacks && window.authCallbacks.onLoginSuccess) {
-        window.authCallbacks.onLoginSuccess(mockUser);
-    }
-}
 
 // Show error message
 function showError(message) {

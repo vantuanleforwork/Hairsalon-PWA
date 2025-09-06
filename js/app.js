@@ -547,8 +547,8 @@ function updateStatistics() {
 function initializeAuth() {
     console.log('🔑 Starting auth initialization...');
     
-    // Clear any existing saved user to force fresh login
-    localStorage.removeItem('user'); // Force fresh login for testing
+    // REMOVED: Force fresh login has been disabled
+    // localStorage.removeItem('user'); // This was preventing auto-login
     
     // Check if auth functions exist
     if (typeof window.initAuth === 'function') {
@@ -575,7 +575,7 @@ function initializeAuth() {
             }
         });
     } else {
-        console.warn('⚠️ Auth functions not found, using fallback');
+        console.error('❌ Auth module not loaded!');
         showLoginScreen();
     }
 }
@@ -650,73 +650,7 @@ function showLoginScreen() {
 }
 
 
-// Handle Google OAuth response (fallback)
-function handleGoogleResponse(response) {
-    console.log('Handling Google OAuth response');
-    
-    if (!response || !response.credential) {
-        showToast('Lỗi đăng nhập. Vui lòng thử lại.', 'error');
-        return;
-    }
-    
-    try {
-        // Parse JWT token
-        const token = response.credential;
-        const payload = parseJwt(token);
-        
-        console.log('User email:', payload.email);
-        
-        // Check if email is allowed
-        if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.ALLOWED_EMAILS) {
-            if (!APP_CONFIG.ALLOWED_EMAILS.includes(payload.email)) {
-                showToast(`Email ${payload.email} không được phép truy cập. Liên hệ admin.`, 'error');
-                return;
-            }
-        }
-        
-        // Create user object
-        const user = {
-            id: payload.sub,
-            email: payload.email,
-            name: payload.name,
-            picture: payload.picture,
-            token: token
-        };
-        
-        // Save user
-        APP_STATE.user = user;
-        localStorage.setItem('user', JSON.stringify(user));
-        
-        // Show main app
-        showMainApp();
-        showToast(`Xin chào ${user.name || user.email}!`, 'success');
-        
-    } catch (error) {
-        console.error('Error processing Google response:', error);
-        showToast('Lỗi xử lý đăng nhập. Vui lòng thử lại.', 'error');
-    }
-}
 
-// Global handleCredentialResponse for Google OAuth callback
-window.handleCredentialResponse = function(response) {
-    console.log('🌍 Global OAuth callback triggered');
-    
-    // Try AUTH module first
-    if (typeof AUTH !== 'undefined' && AUTH.handleCredentialResponse) {
-        return AUTH.handleCredentialResponse(response);
-    }
-    
-    // Fallback to local handling
-    return handleGoogleResponse(response);
-};
-
-// Global auth success handler
-window.handleAuthSuccess = function(user) {
-    console.log('✅ Global auth success:', user.email);
-    APP_STATE.user = user;
-    showMainApp();
-    showToast(`Xin chào ${user.name || user.email}!`, 'success');
-};
 
 // Parse JWT token
 function parseJwt(token) {
@@ -753,29 +687,6 @@ window.setQuickPrice = function(priceInThousands) {
     elements.priceInput.dispatchEvent(event);
 };
 
-// Toggle debug info for OAuth
-window.toggleDebugInfo = function() {
-    const debugDiv = document.getElementById('authDebugInfo');
-    const clientPreview = document.getElementById('clientIdPreview');
-    const googleStatus = document.getElementById('googleApiStatus');
-    
-    if (debugDiv) {
-        debugDiv.classList.toggle('hidden');
-        
-        if (!debugDiv.classList.contains('hidden')) {
-            // Update debug info
-            if (typeof APP_CONFIG !== 'undefined') {
-                const clientId = APP_CONFIG.GOOGLE_CLIENT_ID;
-                clientPreview.textContent = clientId ? clientId.substring(0, 30) + '...' : 'NOT SET';
-            } else {
-                clientPreview.textContent = 'CONFIG NOT LOADED';
-            }
-            
-            googleStatus.textContent = typeof google !== 'undefined' && google.accounts ? 
-                'LOADED ✅' : 'NOT LOADED ❌';
-        }
-    }
-};
 
 // Utility Functions
 function generateOrderId() {
