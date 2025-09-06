@@ -205,7 +205,8 @@ export class HairSalonApp {
       await Auth.validateCurrentSession();
       
       // Check for existing session
-      if (Auth.isAuthenticated && Auth.currentUser) {\n        this.user = Auth.currentUser;
+      if (Auth.isAuthenticated && Auth.currentUser) {
+        this.user = Auth.currentUser;
         console.log('👤 User session found:', this.user.name);
       }
       
@@ -1308,5 +1309,6 @@ if (document.readyState === 'loading') {
 } else {
   app.init();
 }
+
 
 
