@@ -1,223 +1,23 @@
 {
-  "name": "Hair Salon Order Management",
-  "short_name": "Salon Orders",
-  "description": "Ứng dụng quản lý đơn hàng salon tóc - Nhanh chóng, đơn giản, hiệu quả",
-  "version": "1.0.0",
+  "name": "Hair Salon PWA",
+  "short_name": "Hair Salon",
+  "description": "Ứng dụng quản lý salon đơn giản",
   "start_url": "/",
-  "scope": "/",
-  "id": "/salon-orders",
   "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
   "orientation": "portrait-primary",
-  "theme_color": "#8B5CF6",
-  "background_color": "#FFFFFF",
-  "lang": "vi",
-  "dir": "ltr",
-  
-  "categories": [
-    "business",
-    "productivity",
-    "utilities"
-  ],
-  
   "icons": [
     {
-      "src": "icons/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-96x96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-192x192.png",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192' fill='%23667eea'%3E%3Crect width='192' height='192' rx='32'/%3E%3Ctext x='96' y='120' font-family='Arial' font-size='80' text-anchor='middle' fill='white'%3E💇‍♀️%3C/text%3E%3C/svg%3E",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/svg+xml"
     },
     {
-      "src": "icons/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/icon-512x512.png",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512' fill='%23667eea'%3E%3Crect width='512' height='512' rx='64'/%3E%3Ctext x='256' y='320' font-family='Arial' font-size='200' text-anchor='middle' fill='white'%3E💇‍♀️%3C/text%3E%3C/svg%3E",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/favicon-16x16.png",
-      "sizes": "16x16",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/favicon-32x32.png",
-      "sizes": "32x32",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
-  ],
-  
-  "screenshots": [
-    {
-      "src": "screenshots/mobile-login.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Màn hình đăng nhập"
-    },
-    {
-      "src": "screenshots/mobile-orders.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Danh sách đơn hàng"
-    },
-    {
-      "src": "screenshots/mobile-form.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Form tạo đơn hàng"
-    }
-  ],
-  
-  "shortcuts": [
-    {
-      "name": "Tạo đơn hàng mới",
-      "short_name": "Đơn mới",
-      "description": "Tạo đơn hàng mới nhanh chóng",
-      "url": "/?action=new-order",
-      "icons": [
-        {
-          "src": "icons/shortcut-new-order.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Xem đơn hôm nay",
-      "short_name": "Hôm nay",
-      "description": "Xem danh sách đơn hàng hôm nay",
-      "url": "/?action=today",
-      "icons": [
-        {
-          "src": "icons/shortcut-today.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Thống kê",
-      "short_name": "Stats",
-      "description": "Xem thống kê doanh thu",
-      "url": "/?action=stats",
-      "icons": [
-        {
-          "src": "icons/shortcut-stats.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    }
-  ],
-  
-  "share_target": {
-    "action": "/share-target",
-    "method": "POST",
-    "enctype": "application/x-www-form-urlencoded",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  },
-  
-  "launch_handler": {
-    "client_mode": "navigate-existing"
-  },
-  
-  "edge_side_panel": {
-    "preferred_width": 400
-  },
-  
-  "protocol_handlers": [
-    {
-      "protocol": "web+salonorders",
-      "url": "/?protocol=%s"
-    }
-  ],
-  
-  "prefer_related_applications": false,
-  "related_applications": [
-    {
-      "platform": "play",
-      "url": "https://play.google.com/store/apps/details?id=com.salon.orders",
-      "id": "com.salon.orders"
-    },
-    {
-      "platform": "itunes",
-      "url": "https://apps.apple.com/app/salon-orders/id123456789"
-    }
-  ],
-  
-  "file_handlers": [
-    {
-      "action": "/handle-csv",
-      "accept": {
-        "text/csv": [".csv"]
-      },
-      "icons": [
-        {
-          "src": "icons/csv-handler.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ],
-      "launch_type": "single-client"
-    }
-  ],
-  
-  "display_override": [
-    "window-controls-overlay",
-    "standalone",
-    "minimal-ui",
-    "browser"
-  ],
-  
-  "handle_links": "preferred",
-  
-  "capture_links": "existing-client-navigate"
+  ]
 }
