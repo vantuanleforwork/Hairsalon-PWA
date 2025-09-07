@@ -19,7 +19,7 @@ Web app PWA hoàn chỉnh để quản lý đơn hàng cho salon tóc nhỏ, v�
 - 📊 Dashboard với thống kê real-time
 - 📋 Danh sách đơn hàng interactive
 - 🗑️ Xóa đơn hàng với confirmation
-- 💾 LocalStorage fallback
+
 
 ### ✅ Phase 2: Backend Infrastructure
 - 🗃️ Google Sheets database integration
@@ -43,7 +43,7 @@ Web app PWA hoàn chỉnh để quản lý đơn hàng cho salon tóc nhỏ, v�
 
 ### 🔮 Phase 5: PWA Features (Next)
 - 📱 Service Worker
-- 📴 Offline support
+ 
 - 🔄 Background sync
 - 📲 App installation prompt
 
@@ -79,7 +79,7 @@ Web app PWA hoàn chỉnh để quản lý đơn hàng cho salon tóc nhỏ, v�
 - ✅ Lưu trữ dữ liệu trên Google Sheets
 - ✅ Đăng nhập với Google OAuth 2.0
 - ✅ Giao diện responsive cho mobile
-- ✅ Hoạt động offline (PWA)
+
 
 ## 📱 Sử dụng
 
@@ -159,7 +159,7 @@ Dữ liệu được lưu tự động vào Google Sheets với cấu trúc:
 
 ### Phase 5: PWA Features
 - Service Worker
-- Offline support
+ 
 - Install prompt
 - Background sync
 

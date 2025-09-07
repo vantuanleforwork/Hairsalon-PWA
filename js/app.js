@@ -19,6 +19,8 @@ let elements = {};
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
     initializeElements();
+    // Remove search UI for simplified app
+    removeSearchUI();
     setupEventListeners();
     
     // Delay to ensure all modules are loaded
@@ -30,11 +32,31 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Update date/time every minute
     setInterval(updateDateTime, 60000);
-    
-    // Check online status
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
 });
+
+// Remove search and filter UI elements (keep app simple)
+function removeSearchUI() {
+    try {
+        // Remove advanced search toggle button
+        document.getElementById('advancedSearchToggle')?.remove();
+
+        // Remove search input and its container
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            const wrapper = searchInput.closest('.mb-4') || searchInput.parentElement?.parentElement || searchInput.parentElement;
+            wrapper?.remove();
+        }
+
+        // Remove advanced search panel and search stats
+        document.getElementById('advancedSearchPanel')?.remove();
+        document.getElementById('searchStats')?.remove();
+
+        // Remove clear button if present
+        document.getElementById('clearSearch')?.remove();
+    } catch (err) {
+        console.warn('Search UI cleanup warning:', err);
+    }
+}
 
 // Initialize DOM elements
 function initializeElements() {
@@ -118,7 +140,7 @@ function handleServiceButtonClick(e) {
     if (isOther) {
         elements.otherServiceInput.focus();
         elements.otherServiceInput.required = true;
-    } else {
+    } else if (false) {
         elements.otherServiceInput.required = false;
         elements.otherServiceInput.value = '';
     }
@@ -206,13 +228,25 @@ async function handleOrderSubmit(e) {
             btn.classList.remove('selected');
         });
         
-        // Update UI
-        addOrderToList(savedOrder);
+        // Update UI:
+        // - If backend returned the saved order with a real ID, add immediately.
+        // - If not (e.g., no-cors, missing ID), refresh from server to sync.
+        try {
+            if (savedOrder) {
+                const normalizedSaved = {
+                    ...savedOrder,
+                    timestamp: normalizeTimestamp(savedOrder.timestamp || savedOrder.date || new Date())
+                };
+                addOrderToList(normalizedSaved);
+            } else if (typeof refreshOrders === 'function') {
+                await refreshOrders();
+            }
+        } catch (uiErr) {
+            console.warn('Add-to-list failed, will rely on manual refresh:', uiErr);
+        }
         
-        // Refresh orders list
-        setTimeout(() => {
-            refreshOrders();
-        }, 500);
+        // Keep UI responsive: avoid auto-refresh overwriting the new item
+        // Users can tap refresh if needed
         
         showToast('Đã lưu đơn hàng thành công!', 'success');
     } catch (error) {
@@ -275,7 +309,7 @@ async function saveOrderLegacyOffline(order) {
             APP_STATE.orders.unshift(order);
             // No offline storage in realtime mode
             
-            showToast('✅ Đã lưu local (chế độ offline)', 'info');
+            // removed: offline/local save toast
             return order;
         }
         
@@ -287,12 +321,13 @@ async function saveOrderLegacyOffline(order) {
         // No offline storage in realtime mode
         
         // Show appropriate message based on error
-        if (error.message.includes('timeout')) {
+        showToast('Không thể tải dữ liệu từ máy chủ. Vui lòng thử lại.', 'error');
+        if (false && error.message.includes('timeout')) {
             showToast('⚠️ API chậm, đã lưu local. Tự động đồng bộ sau.', 'warning');
         } else if (error.message.includes('CORS') || error.message.includes('network')) {
             showToast('📏 Mạng có vấn đề, đã lưu local.', 'warning');
-        } else {
-            showToast('✅ Đã lưu thành công (offline mode)', 'info');
+        } else if (false) {
+            // removed: offline mode toast
         }
         
         return order;
@@ -301,19 +336,20 @@ async function saveOrderLegacyOffline(order) {
 
 // Add order to list UI
 function addOrderToList(order) {
+    const shortId = order && order.id ? String(order.id).slice(-4) : '----';
     const orderHtml = `
-        <div class="order-card bg-gray-50 rounded-lg p-4 order-item" data-order-id="${order.id}">
+        <div class="order-card bg-gray-50 rounded-lg p-4 order-item" data-order-id="${order?.id || ''}">
             <div class="flex justify-between items-start">
                 <div class="flex-1">
                     <div class="flex items-center space-x-2 mb-1">
-                        <span class="text-xs text-gray-500">${formatTime(order.timestamp)}</span>
-                        <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">#${order.id.slice(-4)}</span>
+                        <span class="text-xs text-gray-500">${formatTime(order?.timestamp)}</span>
+                        <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">#${shortId}</span>
                     </div>
-                    <div class="font-medium text-gray-800">${order.service}</div>
-                    <div class="text-green-600 font-semibold">${formatCurrency(order.price)}</div>
-                    ${order.notes ? `<div class="text-sm text-gray-500 mt-1">${order.notes}</div>` : ''}
+                    <div class="font-medium text-gray-800">${order?.service || '—'}</div>
+                    <div class="text-green-600 font-semibold">${formatCurrency(order?.price || 0)}</div>
+                    ${order?.notes ? `<div class="text-sm text-gray-500 mt-1">${order.notes}</div>` : ''}
                 </div>
-                <button onclick="onDeleteOrderClick('${order.id}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition">
+                <button onclick="onDeleteOrderClick('${order?.id || ''}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
@@ -399,7 +435,7 @@ async function refreshOrders() {
                 // Transform API data if needed
                 const apiOrders = response.orders.map(order => ({
                     id: order.id || generateOrderId(),
-                    timestamp: order.timestamp || order.date || new Date().toISOString(),
+                    timestamp: normalizeTimestamp(order.timestamp || order.date || ''),
                     service: order.service || 'Unknown Service',
                     price: parseInt(order.price) || 0,
                     notes: order.notes || '',
@@ -444,9 +480,9 @@ async function refreshOrders() {
         
         // Show user-friendly message
         if (error.message.includes('timeout')) {
-            showToast('⚠️ Kết nối chậm, hiển thị dữ liệu local', 'info');
+            // removed: offline/local data toast
         } else {
-            showToast('📋 Hiển thị dữ liệu offline', 'info');
+            // removed: offline/local data toast
         }
     } finally {
         showLoading(false);
@@ -488,11 +524,9 @@ async function refreshStatsFromAPI() {
 
 // Display all orders
 function displayOrders() {
-    // Filter today's orders
-    const today = new Date().toDateString();
-    const todayOrders = APP_STATE.orders.filter(order => {
-        return new Date(order.timestamp).toDateString() === today;
-    });
+    // Filter today's orders using robust date key
+    const todayKey = toDateKey(new Date());
+    const todayOrders = APP_STATE.orders.filter(order => toDateKey(order.timestamp) === todayKey);
     
     if (todayOrders.length === 0) {
         elements.ordersList.innerHTML = `
@@ -513,19 +547,20 @@ function displayOrders() {
 
 // Update statistics
 function updateStatistics() {
-    const today = new Date().toDateString();
-    const currentMonth = new Date().getMonth();
+    const todayKey = toDateKey(new Date());
+    const current = new Date();
+    const currentMonth = current.getMonth();
+    const currentYear = current.getFullYear();
     
     // Calculate today's stats
-    const todayOrders = APP_STATE.orders.filter(order => {
-        return new Date(order.timestamp).toDateString() === today;
-    });
+    const todayOrders = APP_STATE.orders.filter(order => toDateKey(order.timestamp) === todayKey);
     
     const todayRevenue = todayOrders.reduce((sum, order) => sum + order.price, 0);
     
     // Calculate month's stats
     const monthOrders = APP_STATE.orders.filter(order => {
-        return new Date(order.timestamp).getMonth() === currentMonth;
+        const d = new Date(order.timestamp);
+        return !isNaN(d.getTime()) && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     });
     
     const monthRevenue = monthOrders.reduce((sum, order) => sum + order.price, 0);
@@ -621,7 +656,7 @@ function showMainApp() {
         console.log('⚙️ App mode: Production with Google Sheets API');
     } else {
         console.log('🎭 App mode: Demo/Offline mode');
-        showToast('📋 App đang chạy ở chế độ offline', 'info');
+        // removed: offline mode toast
     }
     
     refreshOrders();
@@ -688,6 +723,7 @@ function generateOrderId() {
 
 function formatTime(timestamp) {
     const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '--:--';
     return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 }
 
@@ -702,6 +738,48 @@ function formatCurrency(amount, short = false) {
         return (amount / 1000).toFixed(0) + 'k';
     }
     return amount.toLocaleString('vi-VN') + 'đ';
+}
+
+// Normalize various timestamp formats (ISO, Date, dd/MM/yyyy[, HH:mm[:ss]]) to ISO string
+function normalizeTimestamp(input) {
+    if (!input) return new Date().toISOString();
+    if (input instanceof Date) return new Date(input.getTime()).toISOString();
+    if (typeof input === 'number') return new Date(input).toISOString();
+
+    const s = String(input).trim();
+    // Already ISO-like
+    if (/\d{4}-\d{2}-\d{2}T/.test(s)) {
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+    }
+    // Match dd/MM/yyyy or dd-MM-yyyy with optional time HH:mm[:ss]
+    const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:[\s,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (m) {
+        let [, dd, MM, yyyy, hh, mm, ss] = m;
+        if (yyyy.length === 2) yyyy = '20' + yyyy;
+        const d = new Date(
+            parseInt(yyyy, 10),
+            parseInt(MM, 10) - 1,
+            parseInt(dd, 10),
+            parseInt(hh || '0', 10),
+            parseInt(mm || '0', 10),
+            parseInt(ss || '0', 10)
+        );
+        return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+    }
+    // Fallback: let Date try to parse
+    const d2 = new Date(s);
+    return isNaN(d2.getTime()) ? new Date().toISOString() : d2.toISOString();
+}
+
+// Build a YYYY-MM-DD key in local time for day comparisons
+function toDateKey(input) {
+    const d = (input instanceof Date) ? input : new Date(input);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
 }
 
 function updateDateTime() {
