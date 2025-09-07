@@ -119,14 +119,41 @@ function initializeGoogleSignIn() {
             buttonWrapper.style.margin = '0 auto';
             buttonContainer.appendChild(buttonWrapper);
             
+            // Compute numeric width for GIS button (px)
+            let initialWidth = Math.round(buttonWrapper.getBoundingClientRect().width || 0);
+            if (!initialWidth) {
+                initialWidth = Math.round(buttonContainer.getBoundingClientRect().width || 0);
+            }
+            initialWidth = Math.max(240, Math.min(initialWidth || 360, 400));
+
             google.accounts.id.renderButton(buttonWrapper, {
                 type: 'standard',
                 theme: 'outline',  // Keep original theme
                 size: 'large',
                 text: 'signin_with',
-                width: '100%',  // Keep original width setting
+                width: initialWidth,  // numeric px width for stability
                 locale: 'vi'
             });
+            // Helper to re-render with fresh numeric width
+            const reRenderGoogleButton = () => {
+                buttonContainer.innerHTML = '';
+                const w = document.createElement('div');
+                w.style.width = '100%';
+                w.style.maxWidth = '400px';
+                w.style.margin = '0 auto';
+                buttonContainer.appendChild(w);
+                let width = Math.round(w.getBoundingClientRect().width || 0);
+                if (!width) width = Math.round(buttonContainer.getBoundingClientRect().width || 0);
+                width = Math.max(240, Math.min(width || 360, 400));
+                google.accounts.id.renderButton(w, {
+                    type: 'standard',
+                    theme: 'outline',
+                    size: 'large',
+                    text: 'signin_with',
+                    width: width,
+                    locale: 'vi'
+                });
+            };
             // Adjust rendered button to fill container width (px)
             (function adjustGoogleButtonWidth(){
                 const wrapperWidth = Math.round(buttonWrapper.getBoundingClientRect().width || 0);
@@ -138,12 +165,11 @@ function initializeGoogleSignIn() {
             })();
             // Re-adjust on resize/orientation
             window.addEventListener('resize', () => {
-                const wrapperWidth = Math.round(buttonWrapper.getBoundingClientRect().width || 0);
-                const buttonWidth = Math.max(240, Math.min(wrapperWidth || 360, 400));
-                const googleBtn = buttonContainer.querySelector('div[role="button"]');
-                if (googleBtn) {
-                    googleBtn.style.width = buttonWidth + 'px';
-                }
+                // Re-render on resize to keep correct GIS sizing
+                reRenderGoogleButton();
+            });
+            window.addEventListener('orientationchange', () => {
+                reRenderGoogleButton();
             });
             // Guard against late style changes by GIS
             try {
