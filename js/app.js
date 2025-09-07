@@ -194,8 +194,8 @@ async function handleOrderSubmit(e) {
     showLoading(true);
     
     try {
-        // Save order through API or localStorage
-        const savedOrder = await saveOrder(order);
+        // Save order via API (realtime only)
+        const savedOrder = await saveOrderRealtime(order);
         
         // Clear form
         elements.orderForm.reset();
@@ -224,7 +224,8 @@ async function handleOrderSubmit(e) {
 }
 
 // Save order to Google Sheets via API
-async function saveOrder(order) {
+// Legacy offline save (unused in realtime mode)
+async function saveOrderLegacyOffline(order) {
     console.log('📥 Saving order to backend...');
     
     try {
@@ -253,7 +254,7 @@ async function saveOrder(order) {
                 
                 // Also save locally for immediate UI update
                 APP_STATE.orders.unshift(order);
-                localStorage.setItem('orders', JSON.stringify(APP_STATE.orders));
+                // No offline storage in realtime mode
                 
                 // Refresh stats from server
                 setTimeout(() => {
@@ -272,7 +273,7 @@ async function saveOrder(order) {
             // Fallback to localStorage
             await new Promise(resolve => setTimeout(resolve, 300));
             APP_STATE.orders.unshift(order);
-            localStorage.setItem('orders', JSON.stringify(APP_STATE.orders));
+            // No offline storage in realtime mode
             
             showToast('✅ Đã lưu local (chế độ offline)', 'info');
             return order;
@@ -283,7 +284,7 @@ async function saveOrder(order) {
         
         // Always fallback to localStorage - never fail completely
         APP_STATE.orders.unshift(order);
-        localStorage.setItem('orders', JSON.stringify(APP_STATE.orders));
+        // No offline storage in realtime mode
         
         // Show appropriate message based on error
         if (error.message.includes('timeout')) {
@@ -312,7 +313,7 @@ function addOrderToList(order) {
                     <div class="text-green-600 font-semibold">${formatCurrency(order.price)}</div>
                     ${order.notes ? `<div class="text-sm text-gray-500 mt-1">${order.notes}</div>` : ''}
                 </div>
-                <button onclick="deleteOrder('${order.id}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition">
+                <button onclick="onDeleteOrderClick('${order.id}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
@@ -332,7 +333,8 @@ function addOrderToList(order) {
 }
 
 // Delete order
-window.deleteOrder = async function(orderId) {
+// Deprecated local-only delete (not used in realtime mode)
+window._deleteOrderLocal = async function(orderId) {
     if (!confirm('Bạn có chắc muốn xóa đơn hàng này?')) {
         return;
     }
@@ -343,8 +345,7 @@ window.deleteOrder = async function(orderId) {
         // Remove from state
         APP_STATE.orders = APP_STATE.orders.filter(o => o.id !== orderId);
         
-        // Update localStorage
-        localStorage.setItem('orders', JSON.stringify(APP_STATE.orders));
+        // No offline storage in realtime mode
         
         // Remove from UI
         const orderElement = document.querySelector(`[data-order-id="${orderId}"]`);
@@ -407,17 +408,17 @@ async function refreshOrders() {
                 }));
                 
                 APP_STATE.orders = apiOrders;
-                localStorage.setItem('orders', JSON.stringify(APP_STATE.orders));
+                // No offline storage in realtime mode
                 console.log(`✅ Loaded ${apiOrders.length} orders from API`);
                 
             } else {
-                console.warn('⚠️ API response invalid, using localStorage');
-                loadOrdersFromLocalStorage();
+                console.warn('⚠️ API response invalid');
+                APP_STATE.orders = [];
             }
             
         } else {
-            console.log('📋 Loading from localStorage (API not configured)');
-            loadOrdersFromLocalStorage();
+            console.warn('⚠️ API not configured');
+            APP_STATE.orders = [];
         }
         
         displayOrders();
@@ -437,7 +438,7 @@ async function refreshOrders() {
         
     } catch (error) {
         console.error('❌ Error refreshing from API:', error.message);
-        loadOrdersFromLocalStorage();
+        // No offline storage fallback in realtime mode
         displayOrders();
         updateStatistics();
         
@@ -453,17 +454,9 @@ async function refreshOrders() {
 }
 
 // Load orders from localStorage
+// Offline storage disabled: keep orders empty if API fails
 function loadOrdersFromLocalStorage() {
-    const savedOrders = localStorage.getItem('orders');
-    if (savedOrders) {
-        try {
-            APP_STATE.orders = JSON.parse(savedOrders);
-        } catch (e) {
-            APP_STATE.orders = [];
-        }
-    } else {
-        APP_STATE.orders = [];
-    }
+    APP_STATE.orders = [];
 }
 
 // Refresh statistics from API

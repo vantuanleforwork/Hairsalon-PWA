@@ -94,6 +94,20 @@ async function apiCall(endpoint, method = 'GET', data = null, retryCount = 0) {
             }
         }
         
+        // Extra fallback: GAS POST with no-cors (handles common CORS/network failures)
+        try {
+            const isGas = (typeof url === 'string') && (url.includes('script.google.com') || url.includes('googleusercontent.com'));
+            const isNonGet = method !== 'GET';
+            if (retryCount === 0 && isGas && isNonGet) {
+                console.log('dY", Retrying Apps Script POST with no-cors mode...');
+                await fetch(url, { ...options, mode: 'no-cors' });
+                console.log('�o. Request sent (no-cors assumed success)');
+                return { success: true, message: 'Request sent successfully (no-cors)' };
+            }
+        } catch (noCorsError) {
+            console.error('�?O No-cors retry failed:', noCorsError);
+        }
+
         // Retry logic
         if (retryCount < API_CONFIG.retries - 1) {
             console.log(`🔄 Retrying in ${(retryCount + 1) * 1000}ms...`);
