@@ -8,11 +8,13 @@
 
 // Configuration
 const CONFIG = {
-  SPREADSHEET_ID: 'YOUR_SPREADSHEET_ID_HERE', // Replace with your Google Sheets ID
+  SPREADSHEET_ID: '1dqxdNQTdIvf7mccYMW825Xiuck-vK3kOOcHkn-YCphU', // Set by Codex
   SHEET_NAME: 'Orders',
   ALLOWED_ORIGINS: [
     'http://localhost:5500',
     'http://127.0.0.1:5500',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
     'https://vantuanleforwork.github.io' // Replace with your GitHub Pages URL
   ],
   MAX_ORDERS_PER_REQUEST: 100,

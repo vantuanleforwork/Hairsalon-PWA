@@ -5,7 +5,7 @@ const APP_CONFIG = {
     GOOGLE_CLIENT_ID: '36454863313-tlsos46mj2a63sa6k4hjralerarugtku.apps.googleusercontent.com',
     
     // Google Apps Script Web App URL (sau khi deploy)
-    API_BASE_URL: 'https://script.google.com/macros/s/AKfycbzEZneloVbMU027zmziwnr0TCDj5hkZppFHaUoORyPybQN6IO8xCakqrhzue74jfHiE/exec',
+    API_BASE_URL: 'https://script.google.com/macros/s/AKfycbwGxJEgFyVAHWm9nEMfJALkLqC5WagTh14JRaVQLtFG1HG7Er2xAgKQMNuf1K_W1mQS/exec',
     
     // Danh sách email được phép truy cập (whitelist)
     ALLOWED_EMAILS: [
