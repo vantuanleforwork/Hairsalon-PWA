@@ -127,6 +127,37 @@ function initializeGoogleSignIn() {
                 width: '100%',  // Keep original width setting
                 locale: 'vi'
             });
+            // Adjust rendered button to fill container width (px)
+            (function adjustGoogleButtonWidth(){
+                const wrapperWidth = Math.round(buttonWrapper.getBoundingClientRect().width || 0);
+                const buttonWidth = Math.max(240, Math.min(wrapperWidth || 360, 400));
+                const googleBtn = buttonContainer.querySelector('div[role="button"]');
+                if (googleBtn) {
+                    googleBtn.style.width = buttonWidth + 'px';
+                }
+            })();
+            // Re-adjust on resize/orientation
+            window.addEventListener('resize', () => {
+                const wrapperWidth = Math.round(buttonWrapper.getBoundingClientRect().width || 0);
+                const buttonWidth = Math.max(240, Math.min(wrapperWidth || 360, 400));
+                const googleBtn = buttonContainer.querySelector('div[role="button"]');
+                if (googleBtn) {
+                    googleBtn.style.width = buttonWidth + 'px';
+                }
+            });
+            // Guard against late style changes by GIS
+            try {
+                const observer = new MutationObserver(() => {
+                    const wrapperWidth = Math.round(buttonWrapper.getBoundingClientRect().width || 0);
+                    const buttonWidth = Math.max(240, Math.min(wrapperWidth || 360, 400));
+                    const googleBtn = buttonContainer.querySelector('div[role="button"]');
+                    if (googleBtn) {
+                        googleBtn.style.width = buttonWidth + 'px';
+                    }
+                });
+                observer.observe(buttonContainer, { subtree: true, childList: true, attributes: true });
+                setTimeout(() => observer.disconnect(), 2500);
+            } catch (_) {}
             console.log('✅ Google button rendered');
         }
         
