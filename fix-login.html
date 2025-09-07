@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Quick Fix - Google Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
+        <h1 class="text-2xl font-bold mb-6 text-center text-red-600">🔧 Debug & Fix Google Login</h1>
+        
+        <div class="space-y-4">
+            <div id="status" class="p-4 bg-yellow-50 border border-yellow-200 rounded">
+                <div class="font-semibold text-yellow-800">🔍 Checking...</div>
+                <div id="status-detail" class="text-sm text-yellow-700 mt-1">Initializing debug...</div>
+            </div>
+            
+            <div id="debug-steps" class="space-y-2"></div>
+            
+            <div id="google-test" class="border border-gray-200 p-4 rounded">
+                <h3 class="font-semibold mb-2">Google Login Test:</h3>
+                <div id="googleLoginContainer">
+                    <div id="googleButtonPlaceholder" class="w-full h-[40px] bg-white border border-gray-300 rounded flex items-center justify-center">
+                        <span class="text-gray-600 text-sm">🔄 Loading Google button...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="force-fix" class="w-full bg-red-600 text-white py-3 px-4 rounded hover:bg-red-700 transition font-semibold">
+                🔥 Force Fix & Reload Main App
+            </button>
+            
+            <div id="solutions" class="hidden space-y-2"></div>
+        </div>
+    </div>
+
+    <!-- Google API -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <script>
+        const CLIENT_ID = '36454863313-tlsos46mj2a63sa6k4hjralerarugtku.apps.googleusercontent.com';
+        const debugSteps = [];
+        
+        function addDebugStep(message, status = 'info') {
+            debugSteps.push({message, status, time: new Date().toLocaleTimeString()});
+            updateDebugDisplay();
+        }
+        
+        function updateDebugDisplay() {
+            const container = document.getElementById('debug-steps');
+            container.innerHTML = debugSteps.map(step => {
+                const color = step.status === 'success' ? 'text-green-600' : 
+                             step.status === 'error' ? 'text-red-600' : 'text-blue-600';
+                const icon = step.status === 'success' ? '✅' : 
+                            step.status === 'error' ? '❌' : 'ℹ️';
+                return `<div class="${color} text-sm">${icon} [${step.time}] ${step.message}</div>`;
+            }).join('');
+        }
+        
+        function updateStatus(message, detail, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const detailDiv = document.getElementById('status-detail');
+            
+            const colors = {
+                success: 'bg-green-50 border-green-200 text-green-800',
+                error: 'bg-red-50 border-red-200 text-red-800',
+                info: 'bg-blue-50 border-blue-200 text-blue-800'
+            };
+            
+            statusDiv.className = `p-4 border rounded ${colors[type]}`;
+            statusDiv.querySelector('.font-semibold').textContent = message;
+            detailDiv.textContent = detail;
+        }
+        
+        function showSolutions(solutions) {
+            const solutionsDiv = document.getElementById('solutions');
+            solutionsDiv.innerHTML = `
+                <h3 class="font-semibold text-gray-800">💡 Giải pháp:</h3>
+                ${solutions.map(solution => `<div class="p-3 bg-blue-50 rounded text-sm">${solution}</div>`).join('')}
+            `;
+            solutionsDiv.classList.remove('hidden');
+        }
+        
+        async function runDiagnostics() {
+            addDebugStep('Starting diagnostics...');
+            
+            // Check 1: Protocol
+            if (location.protocol === 'file:') {
+                addDebugStep('❌ Protocol: file:// (PROBLEM)', 'error');
+                updateStatus('❌ Protocol Issue', 'App đang chạy trên file://, cần HTTP server', 'error');
+                showSolutions([
+                    '1. Sử dụng Live Server extension trong VS Code',
+                    '2. Hoặc chạy: python -m http.server 8080',
+                    '3. Truy cập: http://localhost:8080',
+                    '4. Google OAuth không hoạt động trên file://'
+                ]);
+                return;
+            } else {
+                addDebugStep(`✅ Protocol: ${location.protocol}`, 'success');
+            }
+            
+            // Check 2: Google API
+            let googleLoaded = false;
+            let attempts = 0;
+            const maxAttempts = 20;
+            
+            while (attempts < maxAttempts && !googleLoaded) {
+                attempts++;
+                if (typeof google !== 'undefined' && google.accounts) {
+                    googleLoaded = true;
+                    addDebugStep('✅ Google API loaded', 'success');
+                } else {
+                    addDebugStep(`⏳ Waiting for Google API... (${attempts}/${maxAttempts})`);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+            
+            if (!googleLoaded) {
+                addDebugStep('❌ Google API failed to load', 'error');
+                updateStatus('❌ Google API Issue', 'Google Identity Services không tải được', 'error');
+                showSolutions([
+                    '1. Kiểm tra kết nối internet',
+                    '2. Thử disable ad-blocker',
+                    '3. Kiểm tra firewall/proxy settings',
+                    '4. Thử browser khác'
+                ]);
+                return;
+            }
+            
+            // Check 3: Try initialize
+            try {
+                addDebugStep('Attempting Google Sign-In initialization...');
+                
+                google.accounts.id.initialize({
+                    client_id: CLIENT_ID,
+                    callback: (response) => {
+                        addDebugStep('✅ Login callback received', 'success');
+                        updateStatus('✅ Login Success', 'Google OAuth hoạt động bình thường!', 'success');
+                    }
+                });
+                
+                addDebugStep('✅ Google Sign-In initialized', 'success');
+                
+                // Check 4: Try render button
+                const container = document.getElementById('googleLoginContainer');
+                const placeholder = document.getElementById('googleButtonPlaceholder');
+                
+                if (placeholder) {
+                    placeholder.remove();
+                }
+                
+                google.accounts.id.renderButton(container, {
+                    type: 'standard',
+                    theme: 'outline',
+                    size: 'large',
+                    text: 'signin_with',
+                    locale: 'vi'
+                });
+                
+                addDebugStep('✅ Google button rendered', 'success');
+                updateStatus('✅ All Checks Passed!', 'Google Login hoạt động bình thường. Có thể là vấn đề timing trong main app.', 'success');
+                
+                showSolutions([
+                    '1. Main app có thể cần thời gian load lâu hơn',
+                    '2. Conflict với PWA initialization',
+                    '3. Click "Force Fix" để reload với fix',
+                    '4. Hoặc sử dụng fallback button trong main app'
+                ]);
+                
+            } catch (error) {
+                addDebugStep(`❌ Initialize failed: ${error.message}`, 'error');
+                updateStatus('❌ Initialize Error', error.message, 'error');
+                showSolutions([
+                    '1. Client ID có thể sai',
+                    '2. Domain không được authorize',
+                    '3. Thử với localhost thay vì 127.0.0.1',
+                    '4. Check Google Cloud Console settings'
+                ]);
+            }
+        }
+        
+        // Force fix button
+        document.getElementById('force-fix').addEventListener('click', () => {
+            addDebugStep('Applying force fix...');
+            
+            // Store fix in localStorage
+            localStorage.setItem('google_oauth_fix', JSON.stringify({
+                applied: true,
+                timestamp: Date.now(),
+                fixes: [
+                    'increased_auth_delay',
+                    'pwa_timing_fix',
+                    'fallback_enabled'
+                ]
+            }));
+            
+            addDebugStep('✅ Fix applied to localStorage', 'success');
+            
+            // Redirect to main app
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+        });
+        
+        // Auto run diagnostics
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(runDiagnostics, 1000);
+        });
+    </script>
+</body>
+</html>

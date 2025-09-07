@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <h1 class="text-2xl font-bold mb-6 text-center">🧪 Test Google Login</h1>
+        
+        <div id="debug-info" class="mb-6 text-sm bg-gray-50 p-4 rounded">
+            <strong>Debug Info:</strong>
+            <div id="debug-content">Loading...</div>
+        </div>
+        
+        <div id="googleLoginContainer" class="mb-4">
+            <div id="googleButtonPlaceholder" class="w-full h-[40px] bg-white border border-gray-300 rounded flex items-center justify-center">
+                <span class="text-gray-600 text-sm">Đang tải Google button...</span>
+            </div>
+        </div>
+        
+        <button id="manualTest" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition">
+            Manual Test Login
+        </button>
+        
+        <div id="result" class="mt-4 p-4 rounded hidden"></div>
+    </div>
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- Config -->
+    <script>
+        const TEST_CONFIG = {
+            GOOGLE_CLIENT_ID: '36454863313-tlsos46mj2a63sa6k4hjralerarugtku.apps.googleusercontent.com',
+            ALLOWED_EMAILS: [
+                'vantuanleforwork@gmail.com',
+                'vantuanle2002@gmail.com', 
+                'v4ntu4nl3@gmail.com',
+                'phonghominh8@gmail.com'
+            ]
+        };
+    </script>
+    
+    <script>
+        // Debug info update
+        function updateDebugInfo() {
+            const debugDiv = document.getElementById('debug-content');
+            debugDiv.innerHTML = `
+                <div>Google API: ${typeof google !== 'undefined' ? '✅ Loaded' : '❌ Not loaded'}</div>
+                <div>Google Accounts: ${typeof google !== 'undefined' && google.accounts ? '✅ Available' : '❌ Not available'}</div>
+                <div>Config: ${TEST_CONFIG.GOOGLE_CLIENT_ID ? '✅ Has Client ID' : '❌ No Client ID'}</div>
+                <div>Protocol: ${window.location.protocol}</div>
+                <div>Host: ${window.location.host}</div>
+            `;
+        }
+        
+        // Initialize test
+        function initTest() {
+            updateDebugInfo();
+            
+            if (typeof google !== 'undefined' && google.accounts) {
+                initGoogleSignIn();
+            } else {
+                console.log('Waiting for Google API...');
+                window.addEventListener('load', () => {
+                    setTimeout(() => {
+                        updateDebugInfo();
+                        if (typeof google !== 'undefined' && google.accounts) {
+                            initGoogleSignIn();
+                        } else {
+                            showResult('❌ Google API failed to load', 'error');
+                        }
+                    }, 2000);
+                });
+            }
+        }
+        
+        // Initialize Google Sign-In
+        function initGoogleSignIn() {
+            console.log('Initializing Google Sign-In...');
+            updateDebugInfo();
+            
+            try {
+                google.accounts.id.initialize({
+                    client_id: TEST_CONFIG.GOOGLE_CLIENT_ID,
+                    callback: handleGoogleResponse,
+                    auto_select: false
+                });
+                
+                const container = document.getElementById('googleLoginContainer');
+                if (container) {
+                    // Clear placeholder
+                    const placeholder = document.getElementById('googleButtonPlaceholder');
+                    if (placeholder) {
+                        placeholder.remove();
+                    }
+                    
+                    // Render button
+                    google.accounts.id.renderButton(container, {
+                        type: 'standard',
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'signin_with',
+                        locale: 'vi'
+                    });
+                    
+                    showResult('✅ Google button rendered successfully', 'success');
+                }
+                
+            } catch (error) {
+                console.error('Failed to initialize Google Sign-In:', error);
+                showResult('❌ Failed to initialize: ' + error.message, 'error');
+            }
+        }
+        
+        // Handle Google response
+        function handleGoogleResponse(response) {
+            console.log('Google response:', response);
+            
+            if (response && response.credential) {
+                try {
+                    // Simple JWT decode for testing
+                    const parts = response.credential.split('.');
+                    const payload = JSON.parse(atob(parts[1]));
+                    
+                    showResult(`✅ Login successful!\nEmail: ${payload.email}\nName: ${payload.name}`, 'success');
+                } catch (e) {
+                    showResult('❌ Failed to decode response: ' + e.message, 'error');
+                }
+            } else {
+                showResult('❌ No credential in response', 'error');
+            }
+        }
+        
+        // Show result
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `mt-4 p-4 rounded ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            resultDiv.textContent = message;
+            resultDiv.classList.remove('hidden');
+        }
+        
+        // Manual test button
+        document.getElementById('manualTest').addEventListener('click', () => {
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.prompt();
+            } else {
+                showResult('❌ Google API not available', 'error');
+            }
+        });
+        
+        // Start test
+        document.addEventListener('DOMContentLoaded', initTest);
+        
+        // Update debug info every 2 seconds
+        setInterval(updateDebugInfo, 2000);
+    </script>
+</body>
+</html>
