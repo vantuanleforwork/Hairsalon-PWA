@@ -11,6 +11,13 @@ const CONFIG = {
   SPREADSHEET_ID: '1dqxdNQTdIvf7mccYMW825Xiuck-vK3kOOcHkn-YCphU', // Set by Codex
   SHEET_NAME: 'Orders',
   GOOGLE_CLIENT_ID: '36454863313-tlsos46mj2a63sa6k4hjralerarugtku.apps.googleusercontent.com',
+  // Server-side whitelist of allowed emails (update as needed)
+  ALLOWED_EMAILS: [
+    'vantuanleforwork@gmail.com',
+    'vantuanle2002@gmail.com',
+    'v4ntu4nl3@gmail.com',
+    'phonghominh8@gmail.com'
+  ],
   ALLOWED_ORIGINS: [
     'http://localhost:5500',
     'http://127.0.0.1:5500',
@@ -21,6 +28,14 @@ const CONFIG = {
   MAX_ORDERS_PER_REQUEST: 100,
   TIMEZONE: 'Asia/Ho_Chi_Minh'
 };
+
+/** Check if email is allowed (server-side) */
+function isAllowedEmail(email) {
+  if (!email) return false;
+  var e = String(email).toLowerCase();
+  var list = (CONFIG && CONFIG.ALLOWED_EMAILS) || [];
+  return list.some(function(x){ return String(x).toLowerCase() === e; });
+}
 
 /** Verify Google ID Token and return email (or null) */
 function verifyIdToken(idToken) {
@@ -93,6 +108,7 @@ function doGet(e) {
     if (action !== 'health') {
       var email = verifyIdToken(params && params.idToken);
       if (!email) return createResponse({ error: 'Unauthorized' }, 401);
+      if (!isAllowedEmail(email)) return createResponse({ error: 'Forbidden' }, 403);
       // attach for downstream filtering
       params._email = email;
     }
@@ -158,6 +174,7 @@ function doPost(e) {
     // Verify idToken and get caller email
     var callerEmail = verifyIdToken((data && data.idToken) || (e && e.parameter && e.parameter.idToken));
     if (!callerEmail) return createResponse({ error: 'Unauthorized' }, 401);
+    if (!isAllowedEmail(callerEmail)) return createResponse({ error: 'Forbidden' }, 403);
     
     var result;
     switch(action) {
@@ -169,6 +186,14 @@ function doPost(e) {
         break;
       case 'delete':
         result = deleteOrder({ ...data, _email: callerEmail });
+        break;
+      case 'orders':
+        // Support fetching orders via POST to avoid exposing idToken in URL
+        result = getOrders({ ...data, _email: callerEmail });
+        break;
+      case 'stats':
+        // Support fetching stats via POST
+        result = getStats({ ...data, _email: callerEmail });
         break;
       default:
         result = { error: 'Invalid action' };
@@ -187,19 +212,23 @@ function doPost(e) {
 function createOrder(data) {
   const sheet = initializeSheet();
   const id = generateOrderId();
-  const timestamp = new Date().toLocaleString('vi-VN', { timeZone: CONFIG.TIMEZONE });
+  // Use Date object for stable storage and ISO for API response
+  const now = new Date();
+  const timestampISO = now.toISOString();
   var createdBy = (data && data._email) || (data && data.createdBy) || (data && data.employee) || 'Unknown';
   
   const newRow = [
     id,
-    timestamp,
+    // Store Date object in sheet for reliable sorting/filtering
+    now,
     data.employee || createdBy || 'Unknown',
     data.service || '',
     data.price || 0,
     data.notes || '',
     'active',
     createdBy,
-    timestamp
+    // Modified At as Date object as well
+    now
   ];
   
   sheet.appendRow(newRow);
@@ -208,7 +237,8 @@ function createOrder(data) {
     success: true,
     order: {
       id: id,
-      timestamp: timestamp,
+      // Return ISO string to clients
+      timestamp: timestampISO,
       employee: data.employee || createdBy,
       service: data.service,
       price: data.price,
@@ -358,11 +388,15 @@ function updateOrder(data) {
   
   for (let i = 1; i < values.length; i++) {
     if (values[i][COLUMNS.ID] === data.id) {
+      // Only owner can mark as deleted
+      var rowOwner = values[i][COLUMNS.CREATED_BY];
+      if (data && data._email && String(rowOwner).toLowerCase() !== String(data._email).toLowerCase()) {
+        return { success: false, error: 'Forbidden' };
+      }
       // Update status to deleted (soft delete)
       sheet.getRange(i + 1, COLUMNS.STATUS + 1).setValue('deleted');
-      sheet.getRange(i + 1, COLUMNS.MODIFIED_AT + 1).setValue(
-        new Date().toLocaleString('vi-VN', { timeZone: CONFIG.TIMEZONE })
-      );
+      // Use Date object for Modified At
+      sheet.getRange(i + 1, COLUMNS.MODIFIED_AT + 1).setValue(new Date());
       
       return {
         success: true,

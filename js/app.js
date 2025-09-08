@@ -447,18 +447,18 @@ async function refreshOrders() {
                 // Client-side filter: only by today to ensure visibility
                 const todayKey = toDateKey(new Date());
                 const filtered = apiOrders.filter(o => toDateKey(o.timestamp) === todayKey);
-                APP_STATE.orders = filtered;
+                APP_STATE.orders = apiOrders;
                 // No offline storage in realtime mode
                 console.log(`✅ Loaded ${apiOrders.length} orders from API`);
                 
             } else {
                 console.warn('⚠️ API response invalid');
-                APP_STATE.orders = [];
+                // APP_STATE.orders left unchanged on invalid response
             }
             
         } else {
             console.warn('⚠️ API not configured');
-            APP_STATE.orders = [];
+            // APP_STATE.orders left unchanged on invalid response
         }
         
         displayOrders();
@@ -496,7 +496,7 @@ async function refreshOrders() {
 // Load orders from localStorage
 // Offline storage disabled: keep orders empty if API fails
 function loadOrdersFromLocalStorage() {
-    APP_STATE.orders = [];
+    // APP_STATE.orders left unchanged on invalid response
 }
 
 // Refresh statistics from API

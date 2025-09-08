@@ -232,22 +232,23 @@ window.createOrder = async function(orderData) {
 
 // Get orders with optional filters
 window.getOrders = async function(filters = {}) {
-    console.log('Getting orders:', filters);
+    console.log('Getting orders (POST form):', filters);
+    const payload = { action: 'orders', ...(filters || {}) };
+    try {
+        const res = await postForm('', payload);
+        if (res && Array.isArray(res.orders)) {
+            console.log('Orders retrieved via POST:', res);
+            return res;
+        }
+        console.warn('POST orders response missing orders array, falling back to JSONP');
+    } catch (err) {
+        console.warn('POST orders failed, fallback to JSONP:', err?.message);
+    }
+    // Fallback to JSONP (will include idToken in URL)
     const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
     const idToken = getIdToken();
-    const queryParams = { action: 'orders', origin, ...(idToken ? { idToken } : {}), ...filters };
-    const qs = new URLSearchParams(queryParams).toString();
-    // Try fetch first, fallback to JSONP in case of CORS
-    try {
-        const response = await apiCall('?' + qs, 'GET', null);
-        console.log('Orders retrieved via fetch:', response);
-        return response;
-    } catch (err) {
-        console.warn('Fetch orders failed, fallback to JSONP:', err?.message);
-        const response = await jsonpGet(queryParams);
-        console.log('Orders retrieved via JSONP:', response);
-        return response;
-    }
+    const queryParams = { action: 'orders', origin, ...(idToken ? { idToken } : {}), ...(filters || {}) };
+    return jsonpGet(queryParams);
 };
 
 // Delete an order (server-side)
@@ -271,21 +272,21 @@ window.deleteOrder = async function(orderId) {
 
 // Get statistics
 window.getStats = async function() {
-    console.log('Getting statistics...');
+    console.log('Getting statistics (POST form)...');
+    try {
+        const res = await postForm('', { action: 'stats' });
+        if (res && (typeof res.todayCount !== 'undefined')) {
+            console.log('Statistics retrieved via POST:', res);
+            return res;
+        }
+        console.warn('POST stats response invalid, falling back to JSONP');
+    } catch (err) {
+        console.warn('POST stats failed, fallback to JSONP:', err?.message);
+    }
     const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
     const idToken = getIdToken();
     const queryParams = { action: 'stats', origin, ...(idToken ? { idToken } : {}) };
-    const qs = new URLSearchParams(queryParams).toString();
-    try {
-        const response = await apiCall('?' + qs, 'GET', null);
-        console.log('Statistics retrieved via fetch:', response);
-        return response;
-    } catch (err) {
-        console.warn('Fetch stats failed, fallback to JSONP:', err?.message);
-        const response = await jsonpGet(queryParams);
-        console.log('Statistics retrieved via JSONP:', response);
-        return response;
-    }
+    return jsonpGet(queryParams);
 };
 
 // Health check
