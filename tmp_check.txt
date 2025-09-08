@@ -1,4 +1,4 @@
-// Main App Logic for Salon Manager PWA
+﻿// Main App Logic for Salon Manager PWA
 'use strict';
 
 // App State
@@ -154,7 +154,7 @@ function handlePriceInput(e) {
     // Limit to max 50000 (50 million in thousands)
     if (value && parseInt(value) > 50000) {
         value = '50000';
-        showToast('Giá tiền tối đa là 50 triệu', 'warning');
+        showToast('GiÃ¡ tiá»n tá»‘i Ä‘a lÃ  50 triá»‡u', 'warning');
     }
     
     // Update input value
@@ -187,17 +187,17 @@ async function handleOrderSubmit(e) {
     
     // Validate
     if (!service) {
-        showToast('Vui lòng chọn dịch vụ', 'error');
+        showToast('Vui lÃ²ng chá»n dá»‹ch vá»¥', 'error');
         return;
     }
     
     if (!priceInThousands || priceInThousands <= 0) {
-        showToast('Vui lòng nhập giá tiền hợp lệ', 'error');
+        showToast('Vui lÃ²ng nháº­p giÃ¡ tiá»n há»£p lá»‡', 'error');
         return;
     }
     
     if (priceInThousands > 50000) {
-        showToast('Giá tiền không được vượt quá 50 triệu', 'error');
+        showToast('GiÃ¡ tiá»n khÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ 50 triá»‡u', 'error');
         return;
     }
     
@@ -248,10 +248,10 @@ async function handleOrderSubmit(e) {
         // Keep UI responsive: avoid auto-refresh overwriting the new item
         // Users can tap refresh if needed
         
-        showToast('Đã lưu đơn hàng thành công!', 'success');
+        showToast('ÄÃ£ lÆ°u Ä‘Æ¡n hÃ ng thÃ nh cÃ´ng!', 'success');
     } catch (error) {
         console.error('Error saving order:', error);
-        showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+        showToast('CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.', 'error');
     } finally {
         showLoading(false);
     }
@@ -260,7 +260,7 @@ async function handleOrderSubmit(e) {
 // Save order to Google Sheets via API
 // Legacy offline save (unused in realtime mode)
 async function saveOrderLegacyOffline(order) {
-    console.log('📥 Saving order to backend...');
+    console.log('ðŸ“¥ Saving order to backend...');
     
     try {
         // Check if API is available
@@ -268,7 +268,7 @@ async function saveOrderLegacyOffline(order) {
             APP_CONFIG && APP_CONFIG.API_BASE_URL && 
             !APP_CONFIG.API_BASE_URL.includes('DEMO_ID')) {
             
-            console.log('⚙️ Using Google Sheets API');
+            console.log('âš™ï¸ Using Google Sheets API');
             
             // Call real API with timeout
             const response = await Promise.race([
@@ -284,7 +284,7 @@ async function saveOrderLegacyOffline(order) {
             ]);
             
             if (response && (response.success || response.id)) {
-                console.log('✅ Order saved to Google Sheets:', response);
+                console.log('âœ… Order saved to Google Sheets:', response);
                 
                 // Also save locally for immediate UI update
                 APP_STATE.orders.unshift(order);
@@ -295,14 +295,14 @@ async function saveOrderLegacyOffline(order) {
                     refreshStatsFromAPI();
                 }, 1000);
                 
-                showToast('✅ Đã lưu và đồng bộ thành công!', 'success');
+                showToast('âœ… ÄÃ£ lÆ°u vÃ  Ä‘á»“ng bá»™ thÃ nh cÃ´ng!', 'success');
                 return order;
             } else {
                 throw new Error('Invalid API response');
             }
             
         } else {
-            console.log('📋 Using local storage (API not configured)');
+            console.log('ðŸ“‹ Using local storage (API not configured)');
             
             // Fallback to localStorage
             await new Promise(resolve => setTimeout(resolve, 300));
@@ -314,18 +314,18 @@ async function saveOrderLegacyOffline(order) {
         }
         
     } catch (error) {
-        console.error('❌ Error saving to API:', error.message);
+        console.error('âŒ Error saving to API:', error.message);
         
         // Always fallback to localStorage - never fail completely
         APP_STATE.orders.unshift(order);
         // No offline storage in realtime mode
         
         // Show appropriate message based on error
-        showToast('Không thể tải dữ liệu từ máy chủ. Vui lòng thử lại.', 'error');
+        showToast('KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u tá»« mÃ¡y chá»§. Vui lÃ²ng thá»­ láº¡i.', 'error');
         if (false && error.message.includes('timeout')) {
-            showToast('⚠️ API chậm, đã lưu local. Tự động đồng bộ sau.', 'warning');
+            showToast('âš ï¸ API cháº­m, Ä‘Ã£ lÆ°u local. Tá»± Ä‘á»™ng Ä‘á»“ng bá»™ sau.', 'warning');
         } else if (error.message.includes('CORS') || error.message.includes('network')) {
-            showToast('📏 Mạng có vấn đề, đã lưu local.', 'warning');
+            showToast('ðŸ“ Máº¡ng cÃ³ váº¥n Ä‘á», Ä‘Ã£ lÆ°u local.', 'warning');
         } else if (false) {
             // removed: offline mode toast
         }
@@ -345,7 +345,7 @@ function addOrderToList(order) {
                         <span class="text-xs text-gray-500">${formatTime(order?.timestamp)}</span>
                         <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">#${shortId}</span>
                     </div>
-                    <div class="font-medium text-gray-800">${order?.service || '—'}</div>
+                    <div class="font-medium text-gray-800">${order?.service || 'â€”'}</div>
                     <div class="text-green-600 font-semibold">${formatCurrency(order?.price || 0)}</div>
                     ${order?.notes ? `<div class="text-sm text-gray-500 mt-1">${order.notes}</div>` : ''}
                 </div>
@@ -371,7 +371,7 @@ function addOrderToList(order) {
 // Delete order
 // Deprecated local-only delete (not used in realtime mode)
 window._deleteOrderLocal = async function(orderId) {
-    if (!confirm('Bạn có chắc muốn xóa đơn hàng này?')) {
+    if (!confirm('Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a Ä‘Æ¡n hÃ ng nÃ y?')) {
         return;
     }
     
@@ -396,16 +396,16 @@ window._deleteOrderLocal = async function(orderId) {
                     <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    <p>Chưa có đơn hàng nào hôm nay</p>
+                    <p>ChÆ°a cÃ³ Ä‘Æ¡n hÃ ng nÃ o hÃ´m nay</p>
                 </div>
             `;
         }
         
         updateStatistics();
-        showToast('Đã xóa đơn hàng', 'success');
+        showToast('ÄÃ£ xÃ³a Ä‘Æ¡n hÃ ng', 'success');
     } catch (error) {
         console.error('Error deleting order:', error);
-        showToast('Không thể xóa đơn hàng', 'error');
+        showToast('KhÃ´ng thá»ƒ xÃ³a Ä‘Æ¡n hÃ ng', 'error');
     } finally {
         showLoading(false);
     }
@@ -421,7 +421,7 @@ async function refreshOrders() {
             APP_CONFIG && APP_CONFIG.API_BASE_URL && 
             !APP_CONFIG.API_BASE_URL.includes('DEMO_ID')) {
             
-            console.log('📥 Loading orders from API...');
+            console.log('ðŸ“¥ Loading orders from API...');
             
             // Add timeout for API call
             const currentUserEmail = (APP_STATE && APP_STATE.user && APP_STATE.user.email) ? APP_STATE.user.email : undefined;
@@ -449,15 +449,15 @@ async function refreshOrders() {
                 const filtered = apiOrders.filter(o => toDateKey(o.timestamp) === todayKey);
                 APP_STATE.orders = filtered;
                 // No offline storage in realtime mode
-                console.log(`✅ Loaded ${apiOrders.length} orders from API`);
+                console.log(`âœ… Loaded ${apiOrders.length} orders from API`);
                 
             } else {
-                console.warn('⚠️ API response invalid');
+                console.warn('âš ï¸ API response invalid');
                 APP_STATE.orders = [];
             }
             
         } else {
-            console.warn('⚠️ API not configured');
+            console.warn('âš ï¸ API not configured');
             APP_STATE.orders = [];
         }
         
@@ -467,7 +467,7 @@ async function refreshOrders() {
         try {
             await refreshStatsFromAPI();
         } catch (statsError) {
-            console.warn('⚠️ Stats refresh failed, using local calculation');
+            console.warn('âš ï¸ Stats refresh failed, using local calculation');
             updateStatistics();
         }
         
@@ -477,7 +477,7 @@ async function refreshOrders() {
         }
         
     } catch (error) {
-        console.error('❌ Error refreshing from API:', error.message);
+        console.error('âŒ Error refreshing from API:', error.message);
         // No offline storage fallback in realtime mode
         displayOrders();
         updateStatistics();
@@ -506,7 +506,7 @@ async function refreshStatsFromAPI() {
             APP_CONFIG && APP_CONFIG.API_BASE_URL && 
             !APP_CONFIG.API_BASE_URL.includes('DEMO_ID')) {
             
-            console.log('📈 Loading stats from API...');
+            console.log('ðŸ“ˆ Loading stats from API...');
             
             const response = await window.getStats();
             
@@ -516,11 +516,11 @@ async function refreshStatsFromAPI() {
                 elements.todayRevenue.textContent = formatCurrency(response.todayRevenue || 0, true);
                 elements.monthRevenue.textContent = formatCurrency(response.monthRevenue || 0, true);
                 
-                console.log('✅ Stats updated from API:', response);
+                console.log('âœ… Stats updated from API:', response);
             }
         }
     } catch (error) {
-        console.error('❌ Error loading stats from API:', error);
+        console.error('âŒ Error loading stats from API:', error);
         // Fallback to local calculation
         updateStatistics();
     }
@@ -537,7 +537,7 @@ function displayOrders() {
     if (todayOrders.length === 0 && APP_STATE.orders.length > 0) {
         // Fallback: show newest recent orders when today has none
         listToShow = [...APP_STATE.orders].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 20);
-        note = '<div class="text-xs text-gray-500 mb-2">Hiển thị đơn gần đây (không có đơn hôm nay)</div>';
+        note = '<div class="text-xs text-gray-500 mb-2">Hiá»ƒn thá»‹ Ä‘Æ¡n gáº§n Ä‘Ã¢y (khÃ´ng cÃ³ Ä‘Æ¡n hÃ´m nay)</div>';
     }
 
     if (listToShow.length === 0) {
@@ -546,7 +546,7 @@ function displayOrders() {
                 <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
-                <p>Chưa có đơn hàng để hiển thị</p>
+                <p>ChÆ°a cÃ³ Ä‘Æ¡n hÃ ng Ä‘á»ƒ hiá»ƒn thá»‹</p>
             </div>
         `;
         return;
@@ -585,37 +585,37 @@ function updateStatistics() {
 
 // Simple auth initialization
 function initializeAuth() {
-    console.log('🔑 Starting auth initialization...');
+    console.log('ðŸ”‘ Starting auth initialization...');
     
     // REMOVED: Force fresh login has been disabled
     // localStorage.removeItem('user'); // This was preventing auto-login
     
     // Check if auth functions exist
     if (typeof window.initAuth === 'function') {
-        console.log('✅ Auth functions available, initializing...');
+        console.log('âœ… Auth functions available, initializing...');
         
         // Initialize auth with callbacks
         window.initAuth({
             onLoginSuccess: (user) => {
-                console.log('🎉 Login success:', user.email);
+                console.log('ðŸŽ‰ Login success:', user.email);
                 APP_STATE.user = user;
                 showMainApp();
-                showToast(`Xin chào ${user.name || user.email}!`, 'success');
+                showToast(`Xin chÃ o ${user.name || user.email}!`, 'success');
             },
             onLoginError: (error) => {
-                console.error('❌ Login error:', error);
+                console.error('âŒ Login error:', error);
                 showToast(error, 'error');
                 showLoginScreen();
             },
             onLogout: () => {
-                console.log('💪 User logged out');
+                console.log('ðŸ’ª User logged out');
                 APP_STATE.user = null;
                 showLoginScreen();
-                showToast('Đã đăng xuất', 'info');
+                showToast('ÄÃ£ Ä‘Äƒng xuáº¥t', 'info');
             }
         });
     } else {
-        console.error('❌ Auth module not loaded!');
+        console.error('âŒ Auth module not loaded!');
         showLoginScreen();
     }
 }
@@ -623,20 +623,20 @@ function initializeAuth() {
 
 // Handle login button click
 function handleLogin() {
-    console.log('🚀 Login button clicked');
+    console.log('ðŸš€ Login button clicked');
     
     if (typeof window.loginWithGoogle === 'function') {
         window.loginWithGoogle();
     } else {
-        console.warn('⚠️ Login function not available');
+        console.warn('âš ï¸ Login function not available');
         alert('Login function not available. Please refresh the page.');
     }
 }
 
 // Handle logout button click
 function handleLogout() {
-    if (confirm('Bạn có chắc muốn đăng xuất?')) {
-        console.log('💪 Logout button clicked');
+    if (confirm('Báº¡n cÃ³ cháº¯c muá»‘n Ä‘Äƒng xuáº¥t?')) {
+        console.log('ðŸ’ª Logout button clicked');
         
         if (typeof window.logoutUser === 'function') {
             window.logoutUser();
@@ -645,7 +645,7 @@ function handleLogout() {
             APP_STATE.user = null;
             localStorage.removeItem('user');
             showLoginScreen();
-            showToast('Đã đăng xuất', 'info');
+            showToast('ÄÃ£ Ä‘Äƒng xuáº¥t', 'info');
         }
     }
 }
@@ -665,9 +665,9 @@ function showMainApp() {
                        !APP_CONFIG.API_BASE_URL.includes('DEMO_ID');
     
     if (hasRealAPI) {
-        console.log('⚙️ App mode: Production with Google Sheets API');
+        console.log('âš™ï¸ App mode: Production with Google Sheets API');
     } else {
-        console.log('🎭 App mode: Demo/Offline mode');
+        console.log('ðŸŽ­ App mode: Demo/Offline mode');
         // removed: offline mode toast
     }
     
@@ -686,7 +686,7 @@ function showLoginScreen() {
     elements.loginScreen.classList.remove('hidden');
     elements.mainApp.classList.add('hidden');
     
-    console.log('🔑 Login screen shown');
+    console.log('ðŸ”‘ Login screen shown');
 }
 
 
@@ -709,14 +709,14 @@ function parseJwt(token) {
 // Handle online status
 function handleOnline() {
     APP_STATE.isOnline = true;
-    showToast('Đã kết nối mạng', 'success');
+    showToast('ÄÃ£ káº¿t ná»‘i máº¡ng', 'success');
     // Sync pending data if any
 }
 
 // Handle offline status
 function handleOffline() {
     APP_STATE.isOnline = false;
-    showToast('Mất kết nối mạng', 'warning');
+    showToast('Máº¥t káº¿t ná»‘i máº¡ng', 'warning');
 }
 
 // Quick price setter
@@ -741,7 +741,7 @@ function formatTime(timestamp) {
 
 function formatCurrency(amount, short = false) {
     if (short && amount >= 1000000000) {
-        return (amount / 1000000000).toFixed(1) + 'Tỷ';
+        return (amount / 1000000000).toFixed(1) + 'Tá»·';
     }
     if (short && amount >= 1000000) {
         return (amount / 1000000).toFixed(1) + 'Tr';
@@ -749,7 +749,7 @@ function formatCurrency(amount, short = false) {
     if (short && amount >= 1000) {
         return (amount / 1000).toFixed(0) + 'k';
     }
-    return amount.toLocaleString('vi-VN') + 'đ';
+    return amount.toLocaleString('vi-VN') + 'Ä‘';
 }
 
 // Normalize various timestamp formats to local ISO-like string (YYYY-MM-DDTHH:mm:ss, no Z)
@@ -810,17 +810,6 @@ function toDateKey(input) {
     return `${y}-${m}-${day}`;
 }
 
-// Parse price values from API/Sheet (supports "60000", "60.000", "60.000 đ", "60,000", etc.)
-function parsePrice(value) {
-    if (typeof value === 'number') return value;
-    if (value == null) return 0;
-    const s = String(value).trim();
-    const digits = s.replace(/\D+/g, '');
-    if (!digits) return 0;
-    const n = parseInt(digits, 10);
-    return isNaN(n) ? 0 : n;
-}
-
 function formatLocalISO(d) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -848,10 +837,10 @@ function showLoading(show) {
 
 function showToast(message, type = 'info') {
     const icons = {
-        success: '✅',
-        error: '❌',
-        warning: '⚠️',
-        info: 'ℹ️'
+        success: 'âœ…',
+        error: 'âŒ',
+        warning: 'âš ï¸',
+        info: 'â„¹ï¸'
     };
     
     elements.toastIcon.textContent = icons[type];

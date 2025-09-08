@@ -271,7 +271,8 @@ function handleGoogleResponse(response) {
             email: payload.email,
             name: payload.name || payload.email.split('@')[0],
             picture: payload.picture || null,
-            loginTime: new Date().toISOString()
+            loginTime: new Date().toISOString(),
+            idToken: credential
         };
         
         // Update auth state
@@ -388,6 +389,7 @@ window.AUTH = {
     logout: window.logoutUser,
     isAuthenticated: () => window.AUTH_STATE.isLoggedIn,
     getCurrentUser: () => window.AUTH_STATE.user,
+    getIdToken: () => window.AUTH_STATE.user?.idToken,
     getState: () => window.AUTH_STATE
 };
 

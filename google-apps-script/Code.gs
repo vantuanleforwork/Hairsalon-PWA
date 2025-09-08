@@ -84,7 +84,14 @@ function doGet(e) {
       default:
         result = { error: 'Invalid action' };
     }
-    
+    // Support JSONP to bypass CORS for static frontends
+    if (params && params.callback) {
+      var cb = String(params.callback).replace(/[^\w\.$]/g, '');
+      var payload = cb + '(' + JSON.stringify(result) + ')';
+      return ContentService.createTextOutput(payload)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+
     return createResponse(result);
   } catch (error) {
     console.error('Error in doGet:', error);
@@ -97,16 +104,31 @@ function doGet(e) {
  */
 function doPost(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
-    const action = data.action || 'create';
+    var data = {};
+    try {
+      var ct = (e && e.postData && e.postData.type) || '';
+      if (ct.indexOf('application/x-www-form-urlencoded') >= 0) {
+        data = e.parameter || {};
+      } else if (ct.indexOf('application/json') >= 0) {
+        data = JSON.parse(e.postData.contents || '{}');
+      } else {
+        // Fallback: try parameter first then JSON parse
+        data = (e && e.parameter && Object.keys(e.parameter).length) ? e.parameter : JSON.parse(e.postData && e.postData.contents || '{}');
+      }
+    } catch (parseErr) {
+      console.warn('POST body parse warning:', parseErr);
+      data = (e && e.parameter) || {};
+    }
+
+    var action = data.action || 'create';
     
-    // Check origin for CORS
-    const origin = e.parameter.origin || e.headers?.Origin;
+    // Check origin for CORS (best-effort)
+    var origin = (e && e.parameter && e.parameter.origin) || (e && e.headers && e.headers.Origin);
     if (!isAllowedOrigin(origin)) {
       return createResponse({ error: 'Unauthorized origin' }, 403);
     }
     
-    let result;
+    var result;
     switch(action) {
       case 'create':
         result = createOrder(data);
@@ -309,7 +331,26 @@ function updateOrder(data) {
  * Delete an order (soft delete)
  */
 function deleteOrder(data) {
-  return updateOrder({ ...data, status: 'deleted' });
+  var sheet = initializeSheet();
+  var dataRange = sheet.getDataRange();
+  var values = dataRange.getValues();
+  
+  for (var i = 1; i < values.length; i++) {
+    if (values[i][COLUMNS.ID] === data.id) {
+      // Physically remove the row
+      sheet.deleteRow(i + 1);
+      return {
+        success: true,
+        message: 'Order row deleted',
+        id: data.id
+      };
+    }
+  }
+  
+  return {
+    success: false,
+    error: 'Order not found'
+  };
 }
 
 /**
