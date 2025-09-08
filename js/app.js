@@ -4,7 +4,8 @@
 // Register minimal Service Worker (no offline caching)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js', { scope: './' })
+        var __ver = (window.APP_CONFIG && window.APP_CONFIG.APP_VERSION) ? window.APP_CONFIG.APP_VERSION : '1.0.0';
+        navigator.serviceWorker.register('sw.js?v=' + encodeURIComponent(__ver), { scope: './' })
             .then(function(reg) {
                 console.log('Service Worker registered:', reg.scope);
 
@@ -1004,3 +1005,24 @@ function showToast(message, type = 'info') {
     } catch (_) {}
 })();
 
+// Force emoji icons for toast (final override)
+(function forceEmojiToast(){
+    try {
+        const previous = window.showToast;
+        window.showToast = function(message, type = 'info') {
+            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            try {
+                elements.toastIcon.textContent = icons[type] || '';
+                elements.toastMessage.textContent = message;
+                elements.toast.classList.remove('hidden');
+                elements.toast.classList.add('toast-show');
+                setTimeout(() => {
+                    elements.toast.classList.remove('toast-show');
+                    setTimeout(() => { elements.toast.classList.add('hidden'); }, 320);
+                }, 3000);
+            } catch (e) {
+                if (typeof previous === 'function') return previous(message, type);
+            }
+        };
+    } catch (_) {}
+})();
