@@ -856,9 +856,14 @@ function showToast(message, type = 'info') {
     
     elements.toastIcon.textContent = icons[type];
     elements.toastMessage.textContent = message;
+    // Ensure toast is visible before slide-in
+    elements.toast.classList.remove('hidden');
     elements.toast.classList.add('toast-show');
     
     setTimeout(() => {
         elements.toast.classList.remove('toast-show');
+        // Hide after slide-out completes
+        setTimeout(() => { elements.toast.classList.add('hidden'); }, 320);
     }, 3000);
 }
+

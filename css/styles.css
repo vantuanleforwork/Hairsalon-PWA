@@ -151,11 +151,7 @@ body {
         padding-left: 1rem;
         padding-right: 1rem;
     }
-    
-    /* Full width buttons on mobile */
-    button {
-        width: 100%;
-    }
+    /* Removed forced full-width buttons on mobile to prevent oversized delete button */
 }
 
 /* Dark mode support (if needed in future) */
