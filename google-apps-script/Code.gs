@@ -10,6 +10,7 @@
 const CONFIG = {
   SPREADSHEET_ID: '1dqxdNQTdIvf7mccYMW825Xiuck-vK3kOOcHkn-YCphU', // Set by Codex
   SHEET_NAME: 'Orders',
+  GOOGLE_CLIENT_ID: '36454863313-tlsos46mj2a63sa6k4hjralerarugtku.apps.googleusercontent.com',
   ALLOWED_ORIGINS: [
     'http://localhost:5500',
     'http://127.0.0.1:5500',
@@ -20,6 +21,24 @@ const CONFIG = {
   MAX_ORDERS_PER_REQUEST: 100,
   TIMEZONE: 'Asia/Ho_Chi_Minh'
 };
+
+/** Verify Google ID Token and return email (or null) */
+function verifyIdToken(idToken) {
+  try {
+    if (!idToken) return null;
+    var url = 'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken);
+    var res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    if (res.getResponseCode() !== 200) return null;
+    var info = JSON.parse(res.getContentText() || '{}');
+    var audOk = info && info.aud === CONFIG.GOOGLE_CLIENT_ID;
+    var email = info && info.email;
+    var verified = (info && (info.email_verified === true || info.email_verified === 'true'));
+    if (audOk && email && verified) return String(email).toLowerCase();
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
 
 // Column indices (0-based)
 const COLUMNS = {
@@ -69,6 +88,14 @@ function doGet(e) {
   try {
     const params = e.parameter;
     const action = params.action || 'orders';
+
+    // Require valid idToken for protected endpoints
+    if (action !== 'health') {
+      var email = verifyIdToken(params && params.idToken);
+      if (!email) return createResponse({ error: 'Unauthorized' }, 401);
+      // attach for downstream filtering
+      params._email = email;
+    }
     
     let result;
     switch(action) {
@@ -121,23 +148,27 @@ function doPost(e) {
     }
 
     var action = data.action || 'create';
-    
+
     // Check origin for CORS (best-effort)
     var origin = (e && e.parameter && e.parameter.origin) || (e && e.headers && e.headers.Origin);
     if (!isAllowedOrigin(origin)) {
       return createResponse({ error: 'Unauthorized origin' }, 403);
     }
+
+    // Verify idToken and get caller email
+    var callerEmail = verifyIdToken((data && data.idToken) || (e && e.parameter && e.parameter.idToken));
+    if (!callerEmail) return createResponse({ error: 'Unauthorized' }, 401);
     
     var result;
     switch(action) {
       case 'create':
-        result = createOrder(data);
+        result = createOrder({ ...data, _email: callerEmail });
         break;
       case 'update':
-        result = updateOrder(data);
+        result = updateOrder({ ...data, _email: callerEmail });
         break;
       case 'delete':
-        result = deleteOrder(data);
+        result = deleteOrder({ ...data, _email: callerEmail });
         break;
       default:
         result = { error: 'Invalid action' };
@@ -157,16 +188,17 @@ function createOrder(data) {
   const sheet = initializeSheet();
   const id = generateOrderId();
   const timestamp = new Date().toLocaleString('vi-VN', { timeZone: CONFIG.TIMEZONE });
+  var createdBy = (data && data._email) || (data && data.createdBy) || (data && data.employee) || 'Unknown';
   
   const newRow = [
     id,
     timestamp,
-    data.employee || 'Unknown',
+    data.employee || createdBy || 'Unknown',
     data.service || '',
     data.price || 0,
     data.notes || '',
     'active',
-    data.createdBy || data.employee || 'Unknown',
+    createdBy,
     timestamp
   ];
   
@@ -177,7 +209,7 @@ function createOrder(data) {
     order: {
       id: id,
       timestamp: timestamp,
-      employee: data.employee,
+      employee: data.employee || createdBy,
       service: data.service,
       price: data.price,
       notes: data.notes,
@@ -192,6 +224,7 @@ function createOrder(data) {
 function getOrders(params) {
   const sheet = initializeSheet();
   const data = sheet.getDataRange().getValues();
+  var requester = params && params._email;
   
   if (data.length <= 1) {
     return { orders: [], total: 0 };
@@ -204,6 +237,11 @@ function getOrders(params) {
     
     // Skip if deleted
     if (row[COLUMNS.STATUS] === 'deleted') continue;
+
+    // Enforce ownership: only return caller's orders
+    if (requester && String(row[COLUMNS.CREATED_BY]).toLowerCase() !== String(requester).toLowerCase()) {
+      continue;
+    }
     
     // Apply date filter if provided
     if (params.date) {
@@ -246,6 +284,7 @@ function getOrders(params) {
 function getStats(params) {
   const sheet = initializeSheet();
   const data = sheet.getDataRange().getValues();
+  var requester = params && params._email;
   
   if (data.length <= 1) {
     return {
@@ -270,9 +309,21 @@ function getStats(params) {
     
     // Skip deleted orders
     if (row[COLUMNS.STATUS] === 'deleted') continue;
+
+    // Enforce ownership
+    if (requester && String(row[COLUMNS.CREATED_BY]).toLowerCase() !== String(requester).toLowerCase()) {
+      continue;
+    }
     
     const orderDate = new Date(row[COLUMNS.TIMESTAMP]);
-    const price = parseFloat(row[COLUMNS.PRICE]) || 0;
+    var priceRaw = row[COLUMNS.PRICE];
+    var price = 0;
+    if (typeof priceRaw === 'number') {
+      price = priceRaw;
+    } else if (priceRaw != null) {
+      var digits = String(priceRaw).replace(/\D+/g, '');
+      price = digits ? parseInt(digits, 10) : 0;
+    }
     
     totalOrders++;
     
@@ -332,25 +383,21 @@ function updateOrder(data) {
  */
 function deleteOrder(data) {
   var sheet = initializeSheet();
-  var dataRange = sheet.getDataRange();
-  var values = dataRange.getValues();
-  
+  var values = sheet.getDataRange().getValues();
+  var requester = data && data._email;
+
   for (var i = 1; i < values.length; i++) {
     if (values[i][COLUMNS.ID] === data.id) {
-      // Physically remove the row
+      // Only owner can delete
+      if (requester && String(values[i][COLUMNS.CREATED_BY]).toLowerCase() !== String(requester).toLowerCase()) {
+        return { success: false, error: 'Forbidden' };
+      }
       sheet.deleteRow(i + 1);
-      return {
-        success: true,
-        message: 'Order row deleted',
-        id: data.id
-      };
+      return { success: true, message: 'Order row deleted', id: data.id };
     }
   }
-  
-  return {
-    success: false,
-    error: 'Order not found'
-  };
+
+  return { success: false, error: 'Order not found' };
 }
 
 /**

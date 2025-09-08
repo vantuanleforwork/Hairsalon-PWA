@@ -234,7 +234,8 @@ window.createOrder = async function(orderData) {
 window.getOrders = async function(filters = {}) {
     console.log('Getting orders:', filters);
     const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
-    const queryParams = { action: 'orders', origin, ...filters };
+    const idToken = getIdToken();
+    const queryParams = { action: 'orders', origin, ...(idToken ? { idToken } : {}), ...filters };
     const qs = new URLSearchParams(queryParams).toString();
     // Try fetch first, fallback to JSONP in case of CORS
     try {
@@ -272,7 +273,8 @@ window.deleteOrder = async function(orderId) {
 window.getStats = async function() {
     console.log('Getting statistics...');
     const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
-    const queryParams = { action: 'stats', origin };
+    const idToken = getIdToken();
+    const queryParams = { action: 'stats', origin, ...(idToken ? { idToken } : {}) };
     const qs = new URLSearchParams(queryParams).toString();
     try {
         const response = await apiCall('?' + qs, 'GET', null);
@@ -290,7 +292,8 @@ window.getStats = async function() {
 window.healthCheck = async function() {
     console.log('Health check...');
     const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
-    const queryParams = { action: 'health', origin };
+    const idToken = getIdToken();
+    const queryParams = { action: 'health', origin, ...(idToken ? { idToken } : {}) };
     const qs = new URLSearchParams(queryParams).toString();
     try {
         const response = await apiCall('?' + qs, 'GET', null);
