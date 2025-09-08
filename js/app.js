@@ -139,6 +139,7 @@ function initializeElements() {
         googleLoginContainer: document.getElementById('googleLoginContainer'),
         logoutBtn: document.getElementById('logoutBtn'),
         userEmail: document.getElementById('userEmail'),
+        accountEmail: document.getElementById('accountEmail'),
         
         // Form elements
         orderForm: document.getElementById('orderForm'),
@@ -493,9 +494,11 @@ async function refreshOrders() {
             console.log('📥 Loading orders from API...');
             
             // Add timeout for API call
+            const todayIso = new Date().toISOString();
             const currentUserEmail = (APP_STATE && APP_STATE.user && APP_STATE.user.email) ? APP_STATE.user.email : undefined;
+            const filters = Object.assign({ date: todayIso, limit: 100 }, currentUserEmail ? { employee: currentUserEmail } : {});
             const response = await Promise.race([
-                window.getOrders(),
+                window.getOrders(filters),
                 new Promise((_, reject) => 
                     setTimeout(() => reject(new Error('API timeout')), 8000)
                 )
@@ -727,6 +730,7 @@ function showMainApp() {
     
     if (APP_STATE.user) {
         elements.userEmail.textContent = APP_STATE.user.email;
+        if (elements.accountEmail) elements.accountEmail.textContent = APP_STATE.user.email;
     }
     
     // Show app status to user

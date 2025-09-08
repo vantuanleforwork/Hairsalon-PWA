@@ -90,18 +90,24 @@
         </header>
         
         <main class="container mx-auto px-4 py-6 max-w-2xl">
-            <!-- Statistics Cards -->
-            <div class="grid grid-cols-3 gap-3 mb-6">
+            <!-- Account Info -->
+            <div id="accountInfo" class="bg-white rounded-xl shadow-sm p-4 mb-4">
+                <div class="text-sm text-gray-600">Tài khoản</div>
+                <div id="accountEmail" class="text-gray-800 font-medium break-all">—</div>
+            </div>
+
+            <!-- Statistics Cards (hidden legacy top block) -->
+            <div id="statsTop" class="hidden grid grid-cols-3 gap-3 mb-6">
                 <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-                    <div class="text-3xl font-bold text-blue-600" id="todayCount">0</div>
+                    <div class="text-3xl font-bold text-blue-600" id="todayCountTop">0</div>
                     <div class="text-xs text-gray-600 mt-1">Số đơn hôm nay</div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-                    <div class="text-3xl font-bold text-green-600" id="todayRevenue">0</div>
+                    <div class="text-3xl font-bold text-green-600" id="todayRevenueTop">0</div>
                     <div class="text-xs text-gray-600 mt-1">Doanh thu ngày</div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-                    <div class="text-3xl font-bold text-purple-600" id="monthRevenue">0</div>
+                    <div class="text-3xl font-bold text-purple-600" id="monthRevenueTop">0</div>
                     <div class="text-xs text-gray-600 mt-1">Doanh thu tháng</div>
                 </div>
             </div>
@@ -216,6 +222,22 @@
                         <span>Lưu đơn hàng</span>
                     </button>
                 </form>
+            </div>
+
+            <!-- Statistics Cards (moved below form) -->
+            <div id="statsBelowForm" class="grid grid-cols-3 gap-3 mb-6">
+                <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                    <div class="text-3xl font-bold text-blue-600" id="todayCount">0</div>
+                    <div class="text-xs text-gray-600 mt-1">Số đơn hôm nay</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                    <div class="text-3xl font-bold text-green-600" id="todayRevenue">0</div>
+                    <div class="text-xs text-gray-600 mt-1">Doanh thu ngày</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-4 text-center">
+                    <div class="text-3xl font-bold text-purple-600" id="monthRevenue">0</div>
+                    <div class="text-xs text-gray-600 mt-1">Doanh thu tháng</div>
+                </div>
             </div>
             
             <!-- Today's Orders List -->

@@ -260,31 +260,58 @@ function getOrders(params) {
     return { orders: [], total: 0 };
   }
   
-  // Skip header row
+  // Determine limit (cap by MAX_ORDERS_PER_REQUEST)
+  var max = (CONFIG && CONFIG.MAX_ORDERS_PER_REQUEST) || 100;
+  var limit = parseInt(params && params.limit, 10);
+  if (!(limit > 0)) limit = max;
+  if (limit > max) limit = max;
+
+  // Optional day filter
+  var haveDayFilter = false;
+  var dayStart = null, dayEnd = null;
+  if (params && params.date) {
+    var d = new Date(params.date);
+    if (!isNaN(d.getTime())) {
+      dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+      dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 0, 0);
+      haveDayFilter = true;
+    }
+  }
+  
   const orders = [];
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
+  // Iterate from newest to oldest (bottom-up)
+  for (var i = data.length - 1; i >= 1; i--) {
+    var row = data[i];
     
-    // Skip if deleted
+    // Skip deleted rows
     if (row[COLUMNS.STATUS] === 'deleted') continue;
 
-    // Enforce ownership: only return caller's orders
+    // Enforce ownership
     if (requester && String(row[COLUMNS.CREATED_BY]).toLowerCase() !== String(requester).toLowerCase()) {
       continue;
     }
-    
-    // Apply date filter if provided
-    if (params.date) {
-      const orderDate = new Date(row[COLUMNS.TIMESTAMP]).toDateString();
-      const filterDate = new Date(params.date).toDateString();
-      if (orderDate !== filterDate) continue;
+
+    // Parse timestamp as Date
+    var ts = row[COLUMNS.TIMESTAMP];
+    if (!(ts instanceof Date)) ts = new Date(ts);
+
+    // Apply day filter (and break early when older than dayStart)
+    if (haveDayFilter) {
+      if (ts >= dayEnd) {
+        // This row is newer than the target day; keep scanning older ones
+        continue;
+      }
+      if (ts < dayStart) {
+        // Older than requested day; since we are bottom-up, earlier rows will be even older
+        break;
+      }
     }
-    
+
     // Apply employee filter if provided
-    if (params.employee && row[COLUMNS.EMPLOYEE] !== params.employee) {
+    if (params && params.employee && row[COLUMNS.EMPLOYEE] !== params.employee) {
       continue;
     }
-    
+
     orders.push({
       id: row[COLUMNS.ID],
       timestamp: row[COLUMNS.TIMESTAMP],
@@ -294,14 +321,11 @@ function getOrders(params) {
       notes: row[COLUMNS.NOTES],
       status: row[COLUMNS.STATUS]
     });
-    
-    // Limit results
-    if (orders.length >= CONFIG.MAX_ORDERS_PER_REQUEST) break;
+
+    if (orders.length >= limit) break;
   }
   
-  // Sort by timestamp descending (newest first)
-  orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  
+  // Orders are already in newest-first order due to bottom-up scan
   return {
     orders: orders,
     total: orders.length
@@ -324,51 +348,53 @@ function getStats(params) {
       totalOrders: 0
     };
   }
-  
-  const today = new Date().toDateString();
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-  
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+
   let todayCount = 0;
   let todayRevenue = 0;
   let monthRevenue = 0;
-  let totalOrders = 0;
-  
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    
-    // Skip deleted orders
-    if (row[COLUMNS.STATUS] === 'deleted') continue;
+  let totalOrders = 0; // Count within current month (sufficient for UI)
 
-    // Enforce ownership
-    if (requester && String(row[COLUMNS.CREATED_BY]).toLowerCase() !== String(requester).toLowerCase()) {
-      continue;
+  // Iterate from newest to oldest; break when older than current month
+  for (var i = data.length - 1; i >= 1; i--) {
+    var row = data[i];
+    if (row[COLUMNS.STATUS] === 'deleted') continue;
+    if (requester && String(row[COLUMNS.CREATED_BY]).toLowerCase() !== String(requester).toLowerCase()) continue;
+
+    var ts = row[COLUMNS.TIMESTAMP];
+    if (!(ts instanceof Date)) ts = new Date(ts);
+
+    if (ts < monthStart) {
+      // Older than current month: stop scanning
+      break;
     }
-    
-    const orderDate = new Date(row[COLUMNS.TIMESTAMP]);
-    var priceRaw = row[COLUMNS.PRICE];
-    var price = 0;
-    if (typeof priceRaw === 'number') {
-      price = priceRaw;
-    } else if (priceRaw != null) {
-      var digits = String(priceRaw).replace(/\D+/g, '');
-      price = digits ? parseInt(digits, 10) : 0;
-    }
-    
-    totalOrders++;
-    
-    // Today's stats
-    if (orderDate.toDateString() === today) {
-      todayCount++;
-      todayRevenue += price;
-    }
-    
-    // Month's stats
-    if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
+
+    // Only count within current month
+    if (ts >= monthStart && ts < nextMonthStart) {
+      var priceRaw = row[COLUMNS.PRICE];
+      var price = 0;
+      if (typeof priceRaw === 'number') {
+        price = priceRaw;
+      } else if (priceRaw != null) {
+        var digits = String(priceRaw).replace(/\D+/g, '');
+        price = digits ? parseInt(digits, 10) : 0;
+      }
+
+      totalOrders++;
       monthRevenue += price;
+
+      if (ts >= todayStart && ts < tomorrowStart) {
+        todayCount++;
+        todayRevenue += price;
+      }
     }
   }
-  
+
   return {
     todayCount: todayCount,
     todayRevenue: todayRevenue,
