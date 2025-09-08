@@ -38,7 +38,18 @@ function jsonpGet(params) {
             if (timer) clearTimeout(timer);
         };
 
-        window[cb] = (data) => { cleanup(); resolve(data); };
+        window[cb] = (data) => {
+            try {
+                if (data && (data.error === 'Unauthorized' || data.error === 'Forbidden')) {
+                    try { if (typeof window.onAuthExpired === 'function') window.onAuthExpired(); } catch (_) {}
+                    cleanup();
+                    reject(new Error(data.error));
+                    return;
+                }
+            } catch (_) {}
+            cleanup();
+            resolve(data);
+        };
         const script = document.createElement('script');
         script.src = src;
         script.onerror = () => { cleanup(); reject(new Error('JSONP load error')); };
@@ -79,11 +90,30 @@ async function postForm(endpoint, payload) {
     };
     try {
         const res = await fetch(url, options);
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        if (!res.ok) {
+            if (res.status === 401 || res.status === 403) {
+                try { if (typeof window.onAuthExpired === 'function') window.onAuthExpired(); } catch (_) {}
+            }
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
         const ct = res.headers.get('content-type') || '';
-        if (ct.includes('application/json')) return res.json();
+        if (ct.includes('application/json')) {
+            const data = await res.json();
+            if (data && (data.error === 'Unauthorized' || data.error === 'Forbidden')) {
+                try { if (typeof window.onAuthExpired === 'function') window.onAuthExpired(); } catch (_) {}
+                throw new Error(data.error);
+            }
+            return data;
+        }
         const text = await res.text();
-        try { return JSON.parse(text); } catch (_) { return { data: text, success: true }; }
+        try { 
+            const data = JSON.parse(text);
+            if (data && (data.error === 'Unauthorized' || data.error === 'Forbidden')) {
+                try { if (typeof window.onAuthExpired === 'function') window.onAuthExpired(); } catch (_) {}
+                throw new Error(data.error);
+            }
+            return data;
+        } catch (_) { return { data: text, success: true }; }
     } catch (err) {
         // Fallback one attempt with no-cors for GAS
         try {
@@ -150,16 +180,29 @@ async function apiCall(endpoint, method = 'GET', data = null, retryCount = 0) {
         if (response.ok) {
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
-                return await response.json();
+                const json = await response.json();
+                if (json && (json.error === 'Unauthorized' || json.error === 'Forbidden')) {
+                    try { if (typeof window.onAuthExpired === 'function') window.onAuthExpired(); } catch (_) {}
+                    throw new Error(json.error);
+                }
+                return json;
             } else {
                 const text = await response.text();
                 try {
-                    return JSON.parse(text);
+                    const data = JSON.parse(text);
+                    if (data && (data.error === 'Unauthorized' || data.error === 'Forbidden')) {
+                        try { if (typeof window.onAuthExpired === 'function') window.onAuthExpired(); } catch (_) {}
+                        throw new Error(data.error);
+                    }
+                    return data;
                 } catch (e) {
                     return { data: text, success: true };
                 }
             }
         } else {
+            if (response.status === 401 || response.status === 403) {
+                try { if (typeof window.onAuthExpired === 'function') window.onAuthExpired(); } catch (_) {}
+            }
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         

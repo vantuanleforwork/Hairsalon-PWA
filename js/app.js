@@ -1,6 +1,15 @@
 // Main App Logic for Salon Manager PWA
 'use strict';
 
+// Register minimal Service Worker (no offline caching)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js', { scope: './' })
+            .then(function(reg) { console.log('Service Worker registered:', reg.scope); })
+            .catch(function(err) { console.warn('Service Worker registration failed:', err); });
+    });
+}
+
 // App State
 const APP_STATE = {
     user: null,
@@ -688,6 +697,23 @@ function showLoginScreen() {
     
     console.log('🔑 Login screen shown');
 }
+
+// Handle auth expiry from API layer
+window.onAuthExpired = function() {
+    try {
+        showToast('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.', 'warning');
+    } catch (_) {}
+    try {
+        if (typeof window.logoutUser === 'function') {
+            window.logoutUser();
+        } else {
+            // Fallback: clear local session and show login
+            localStorage.removeItem('user');
+            APP_STATE.user = null;
+            showLoginScreen();
+        }
+    } catch (_) {}
+};
 
 
 

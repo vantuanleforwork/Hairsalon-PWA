@@ -1,229 +1,53 @@
-# 💇‍♀️ Salon Manager PWA
-
-Web app PWA hoàn chỉnh để quản lý đơn hàng cho salon tóc nhỏ, với Google OAuth, backend API, search/filter và export data.
-
-## 🚀 Current Status: Phase 4 Complete! 🎉
-
-**Phase 1: Frontend UI** ✅ COMPLETE  
-**Phase 2: Backend API** ✅ COMPLETE  
-**Phase 3: OAuth Integration** ✅ COMPLETE  
-**Phase 4: Frontend-Backend Integration** ✅ COMPLETE 🎆  
-**Phase 5: PWA Features** 🔄 NEXT  
-**Phase 6: Testing & Deployment** ⏳ PLANNED
-
-## 🌟 Tính năng hoàn chỉnh
-
-### ✅ Phase 1: UI/UX Foundation
-- 📱 Mobile-first responsive design
-- 🎨 Form nhập đơn hàng đẹp như Google Form
-- 📊 Dashboard với thống kê real-time
-- 📋 Danh sách đơn hàng interactive
-- 🗑️ Xóa đơn hàng với confirmation
-
-
-### ✅ Phase 2: Backend Infrastructure
-- 🗃️ Google Sheets database integration
-- ⚡ Google Apps Script API endpoints
-- 🔄 CRUD operations (Create, Read, Update, Delete)
-- 📈 Real-time statistics calculation
-- 🧪 Comprehensive API testing tools
-
-### ✅ Phase 3: Authentication
-- 🔐 Google OAuth 2.0 integration
-- 👥 Email whitelist security
-- 🎟️ JWT token management
-- 🔄 Session persistence
-- 📱 Mobile OAuth support
-
-### ✅ Phase 4: Full Integration
-- 🔗 Frontend-Backend full integration
-- 🔍 Advanced search & filter system
-- 📊 Real-time statistics sync
-- 🛠️ Comprehensive testing suite
-
-### 🔮 Phase 5: PWA Features (Next)
-- 📱 Service Worker
- 
-- 🔄 Background sync
-- 📲 App installation prompt
-
-## 🎮 Sử dụng
-
-### 🚀 Quick Start
-1. Mở `index.html` trong trình duyệt
-2. Đăng nhập bằng Google OAuth (hoặc fallback demo)
-3. Nhập đơn hàng mới:
-   - Chọn dịch vụ từ grid buttons
-   - Nhập giá tiền (nghìn đồng)
-   - Thêm ghi chú nếu cần
-   - Click "Lưu đơn hàng"
-4. Sử dụng tính năng nâng cao:
-   - 🔍 Tìm kiếm và lọc đơn hàng
-   - 📊 Xem thống kê real-time
-
-### 🧠 Testing Tools
-- `test-api.html` - Test Google Apps Script API
-- `test-oauth.html` - Test Google OAuth flow  
-- `test-full-flow.html` - Test toàn bộ tính năng
-
-### 🏠 Cấu trúc project
-```
 # Salon Manager PWA
 
-Ứng dụng quản lý đơn hàng cho salon tóc - Progressive Web App
+Ứng dụng web (PWA) quản lý đơn hàng cho salon, đăng nhập bằng Google, lưu dữ liệu vào Google Sheets qua Google Apps Script. Bản này ưu tiên đơn giản, không bao gồm tính năng offline/cache và không kèm các trang test/hướng dẫn riêng.
 
-## 🚀 Tính năng
+## Tính Năng Hiện Có
+- Đăng nhập Google OAuth 2.0 (Google Identity Services) và whitelist email (`config.js`).
+- Tạo đơn nhanh: chọn dịch vụ, nhập giá (nghìn đồng), ghi chú.
+- Danh sách đơn trong ngày và xoá đơn.
+- Thống kê: số đơn hôm nay, doanh thu hôm nay/tháng (đồng bộ từ API).
+- PWA installable: Manifest + Service Worker tối thiểu (không cache offline).
 
-- ✅ Nhập đơn hàng nhanh chóng
-- ✅ Thống kê doanh thu theo ngày/tháng
-- ✅ Lưu trữ dữ liệu trên Google Sheets
-- ✅ Đăng nhập với Google OAuth 2.0
-- ✅ Giao diện responsive cho mobile
+## Không Bao Gồm (đã lược bỏ)
+- Tìm kiếm/lọc nâng cao và export dữ liệu.
+- Tính năng offline/cache, background sync.
+- Các trang test và tài liệu hướng dẫn riêng lẻ.
 
+## Cấu Trúc
+- `index.html` — Trang chính (UI, Tailwind CDN, load các script).
+- `config.js` — Cấu hình app (Client ID, API URL, whitelist, v.v.).
+- `js/app.js` — Logic UI chính, đăng ký Service Worker.
+- `js/auth.js` — Xác thực Google, quản lý phiên.
+- `js/api.js` — Gọi API Apps Script (create/read/delete/stats) với fallback phù hợp.
+- `js/utils.js` — Tiện ích lưu/xoá đơn và cập nhật UI.
+- `css/styles.css` — Kiểu dáng tuỳ biến, tối ưu mobile.
+- `manifest.json` — Manifest PWA (`start_url`/`scope` đặt là `.`).
+- `sw.js` — Service Worker tối thiểu (pass‑through, không cache).
+- `google-apps-script/Code.gs` — Backend Apps Script làm việc với Google Sheets.
+- `.github/workflows/deploy.yml` — Deploy GitHub Pages.
 
-## 📱 Sử dụng
+## Cấu Hình Nhanh
+1. Mở `config.js` và cập nhật:
+   - `GOOGLE_CLIENT_ID`: Client ID (Web) từ Google Cloud Console.
+   - `API_BASE_URL`: URL Web App đã deploy từ Apps Script.
+   - `ALLOWED_EMAILS`: Danh sách email được phép đăng nhập.
+   - `PRODUCTION_URL`: URL sản phẩm (ví dụ GitHub Pages).
+2. Đảm bảo domain/trỏ host bạn dùng có trong danh sách Authorized JavaScript origins của OAuth (ví dụ `http://localhost:5500`, `http://localhost:8080`, domain production). Nếu không, đăng nhập Google sẽ không hoạt động.
 
-### Cách 1: Live Server (VS Code)
-1. Mở project trong VS Code
-2. Cài extension "Live Server"
-3. Right-click vào `index.html` → "Open with Live Server"
-4. Truy cập: http://localhost:5500
+## Chạy Local
+- Yêu cầu chạy qua HTTP/HTTPS (không mở trực tiếp `file://`).
+- Tuỳ chọn:
+  - VS Code Live Server.
+  - Python: `python -m http.server 8080`
+  - Node serve: `npx serve -p 8080`
+- Mở trình duyệt tới `http://localhost:8080` (hoặc port bạn chọn).
 
-### Cách 2: Python HTTP Server
-```bash
-python -m http.server 8080
-```
-Truy cập: http://localhost:8080
+## Deploy (tùy chọn)
+- GitHub Pages: repo đã có workflow. Push lên nhánh `main/master`, Pages sẽ phục vụ thư mục gốc.
+- Vì `start_url`/`scope` dùng `.` nên app vẫn chạy đúng ở subpath.
 
-## 🔐 Đăng nhập
+## Lưu Ý Bảo Mật
+- Client gửi `idToken` từ Google; server (Apps Script) xác minh token và kiểm tra whitelist email.
+- Backend chỉ trả/cho phép thao tác với các đơn do chính email đang đăng nhập tạo.
 
-Sử dụng tài khoản Google đã được cấp quyền trong `config.js`
-
-## 📊 Google Sheets
-
-Dữ liệu được lưu tự động vào Google Sheets với cấu trúc:
-- ID | Timestamp | Nhân viên | Dịch vụ | Giá tiền | Ghi chú | Trạng thái
-
-## 🌐 Deploy
-
-### GitHub Pages
-1. Push code lên GitHub
-2. Settings → Pages → Deploy from branch (main)
-3. Truy cập: https://[username].github.io/Hairsalon-PWA/
-├── index.html                  # Main app
-├── manifest.json              # PWA manifest
-├── js/
-│   ├── app.js                # Main app logic
-│   ├── auth.js               # OAuth authentication
-│   ├── api.js                # API integration
-│   ├── search.js             # Search & filter
-│   └── utils.js              # Utilities
-├── google-apps-script/        # Backend code
-│   └── Code.gs               # Apps Script API
-├── test-*.html                # Testing tools
-├── config.js                  # App configuration
-└── icons/                     # PWA icons
-```
-
-## 🛠️ Tech Stack
-
-- **Frontend**: HTML5, CSS3 (Tailwind), JavaScript (Vanilla)
-- **Database**: Google Sheets (Phase 2)
-- **Backend**: Google Apps Script (Phase 2)
-- **Authentication**: Google OAuth 2.0 (Phase 3)
-- **Hosting**: GitHub Pages
-- **PWA**: Service Worker, Manifest (Phase 5)
-
-## 📋 Roadmap
-
-### Phase 1: Frontend (✅ Hoàn thành)
-- Giao diện HTML/CSS responsive
-- Form nhập liệu
-- Mock data với localStorage
-- Basic JavaScript interactions
-
-### Phase 2: Google Sheets & Apps Script
-- Setup Google Sheets template
-- Create Apps Script API
-- CORS configuration
-
-### Phase 3: Authentication
-- Google Cloud Console setup
-- OAuth 2.0 implementation
-- Email whitelist
-
-### Phase 4: API Integration
-- Connect frontend to backend
-- CRUD operations
-- Real-time sync
-
-### Phase 5: PWA Features
-- Service Worker
- 
-- Install prompt
-- Background sync
-
-### Phase 6: Deployment
-- GitHub Pages setup
-- Custom domain (optional)
-- Performance optimization
-- User documentation
-
-## 🔧 Development
-
-### Prerequisites
-- Modern web browser
-- Text editor (VS Code recommended)
-- Live Server extension (optional)
-
-### Local development
-```bash
-# Clone repo
-git clone https://github.com/yourusername/salon-app.git
-
-# Open in VS Code
-code salon-app
-
-# Run with Live Server or open index.html
-```
-
-### Configuration
-1. Copy `config.example.js` to `config.js`
-2. Update với thông tin thực của bạn:
-   - Google Client ID
-   - Apps Script URL
-   - Allowed emails
-   - Production URL
-
-## 📝 Notes
-
-- App được thiết kế mobile-first
-- Không cần server, chạy hoàn toàn trên client
-- Data sync qua Google Sheets API
-- Bảo mật với email whitelist
-
-## 📄 License
-
-MIT License - Free to use and modify
-
-## 👨‍💻 Author
-
-Salon Manager PWA Team
-
-## 📚 Tài liệu chi tiết
-
-- [`PHASE4_SUMMARY.md`](PHASE4_SUMMARY.md) - Tổng hợp Phase 4
-- [`SETUP_GUIDE.md`](SETUP_GUIDE.md) - Hướng dẫn thiết lập
-- [`API_SETUP.md`](API_SETUP.md) - Cài đặt Google Apps Script
-- [`OAUTH_SETUP.md`](OAUTH_SETUP.md) - Cài đặt Google OAuth
-
----
-
-**Version 4.0.0** - Phase 4 Complete! 🚀🎆
-
-**Tính năng mới trong Phase 4:**
-- 🔗 Full frontend-backend integration
-- 🔍 Advanced search & filter system  
-- 📊 Real-time API statistics sync
-- 🛠️ Comprehensive testing suite
-- 📱 Enhanced mobile experience
