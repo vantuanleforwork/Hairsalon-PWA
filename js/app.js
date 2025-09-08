@@ -5,7 +5,67 @@
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('sw.js', { scope: './' })
-            .then(function(reg) { console.log('Service Worker registered:', reg.scope); })
+            .then(function(reg) {
+                console.log('Service Worker registered:', reg.scope);
+
+                let pendingReload = false;
+
+                function getBannerEls() {
+                    return {
+                        banner: document.getElementById('updateBanner'),
+                        btn: document.getElementById('reloadAppBtn')
+                    };
+                }
+
+                function showUpdateBanner() {
+                    const { banner, btn } = getBannerEls();
+                    if (!banner || !btn) return;
+                    banner.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.textContent = 'Tải lại';
+                    btn.onclick = function() {
+                        const waiting = reg.waiting;
+                        if (!waiting) return;
+                        pendingReload = true;
+                        try { btn.disabled = true; btn.textContent = 'Đang cập nhật...'; } catch (_) {}
+                        waiting.postMessage({ type: 'SKIP_WAITING' });
+                    };
+                }
+
+                function hideUpdateBanner() {
+                    const { banner } = getBannerEls();
+                    banner?.classList.add('hidden');
+                }
+
+                // If there's an update already waiting when page loads
+                if (reg.waiting && navigator.serviceWorker.controller) {
+                    showUpdateBanner();
+                }
+
+                // When a new worker is found, show banner after it's installed
+                reg.addEventListener('updatefound', function() {
+                    const newSW = reg.installing;
+                    if (!newSW) return;
+                    newSW.addEventListener('statechange', function() {
+                        if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                            showUpdateBanner();
+                        }
+                    });
+                });
+
+                // Reload only when user requested and the new SW takes control
+                navigator.serviceWorker.addEventListener('controllerchange', function() {
+                    hideUpdateBanner();
+                    if (pendingReload) {
+                        try { console.log('New service worker active, reloading (user-initiated)...'); } catch (_) {}
+                        window.location.reload();
+                    }
+                });
+
+                // Proactively check for updates now and periodically
+                try { reg.update(); } catch (_) {}
+                setInterval(function(){ try { reg.update(); } catch (_) {} }, 60 * 60 * 1000); // every hour
+            })
             .catch(function(err) { console.warn('Service Worker registration failed:', err); });
     });
 }
