@@ -11,38 +11,36 @@
     <meta name="theme-color" content="#8b5cf6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    
     <title>Salon Manager - Quản lý đơn hàng</title>
-    
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/styles.css">
-    
+
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-    
+
     <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
-    <link rel="apple-touch-icon" href="icons/icon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 </head>
 <body class="bg-gray-50 font-['Inter'] min-h-screen">
-    
     <!-- Login Screen -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
             <div class="text-center mb-8">
-                <div class="text-6xl mb-4">💇‍♀️</div>
+                <div class="text-6xl mb-4">💇</div>
                 <h1 class="text-2xl font-bold text-gray-800 mb-2">Salon Manager</h1>
                 <p class="text-gray-600">Đăng nhập để quản lý đơn hàng</p>
             </div>
-            
+
             <!-- Google OAuth Button Container (only official GIS button) -->
             <div id="googleLoginContainer" class="mb-4">
                 <!-- Loading placeholder -->
@@ -58,14 +56,13 @@
                     </div>
                 </div>
             </div>
-            
+
             <p class="text-center text-xs text-gray-500 mt-6">
-                Chỉ nhân viên được ủy quyền mới có thể đăng nhập
+                Chỉ nhân viên được cấp quyền mới có thể đăng nhập
             </p>
-            
         </div>
     </div>
-    
+
     <!-- Main App -->
     <div id="mainApp" class="hidden">
         <!-- Header -->
@@ -73,14 +70,14 @@
             <div class="container mx-auto px-4 py-3">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center space-x-3">
-                        <span class="text-2xl">💇‍♀️</span>
+                        <span class="text-2xl">💇</span>
                         <div>
                             <h1 class="text-lg font-semibold">Salon Manager</h1>
-                            <p class="text-xs opacity-90" id="currentDate">Thứ 2, 06/01/2025</p>
+                            <p class="text-xs opacity-90" id="currentDate">—</p>
                         </div>
                     </div>
                     <div class="flex items-center space-x-3">
-                        <span id="userEmail" class="text-sm hidden sm:inline">user@gmail.com</span>
+                        <span id="userEmail" class="text-sm hidden sm:inline">—</span>
                         <button id="logoutBtn" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg text-sm font-medium transition">
                             Đăng xuất
                         </button>
@@ -88,7 +85,7 @@
                 </div>
             </div>
         </header>
-        
+
         <main class="container mx-auto px-4 py-6 max-w-2xl">
             <!-- Account Info -->
             <div id="accountInfo" class="bg-white rounded-xl shadow-sm p-4 mb-4">
@@ -96,28 +93,12 @@
                 <div id="accountEmail" class="text-gray-800 font-medium break-all">—</div>
             </div>
 
-            <!-- Statistics Cards (hidden legacy top block) -->
-            <div id="statsTop" class="hidden grid grid-cols-3 gap-3 mb-6">
-                <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-                    <div class="text-3xl font-bold text-blue-600" id="todayCountTop">0</div>
-                    <div class="text-xs text-gray-600 mt-1">Số đơn hôm nay</div>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-                    <div class="text-3xl font-bold text-green-600" id="todayRevenueTop">0</div>
-                    <div class="text-xs text-gray-600 mt-1">Doanh thu ngày</div>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm p-4 text-center">
-                    <div class="text-3xl font-bold text-purple-600" id="monthRevenueTop">0</div>
-                    <div class="text-xs text-gray-600 mt-1">Doanh thu tháng</div>
-                </div>
-            </div>
-            
             <!-- Order Form - Simple like Google Form -->
             <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                     <span class="mr-2">📝</span> Nhập đơn hàng mới
                 </h2>
-                
+
                 <form id="orderForm" class="space-y-4">
                     <!-- Service Selection -->
                     <div>
@@ -125,67 +106,44 @@
                             Dịch vụ <span class="text-red-500">*</span>
                         </label>
                         <div class="grid grid-cols-3 gap-2" id="serviceButtons">
-                            <button type="button" 
-                                    class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center"
-                                    data-service="Cắt tóc">
-                                <div class="text-2xl mb-1">✂️</div>
+                            <button type="button" class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center" data-service="Cắt tóc">
+                                <div class="text-2xl mb-1">💇</div>
                                 <div class="text-xs font-medium">Cắt tóc</div>
                             </button>
-                            <button type="button" 
-                                    class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center"
-                                    data-service="Gội">
-                                <div class="text-2xl mb-1">💆</div>
+                            <button type="button" class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center" data-service="Gội">
+                                <div class="text-2xl mb-1">🚿</div>
                                 <div class="text-xs font-medium">Gội</div>
                             </button>
-                            <button type="button" 
-                                    class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center"
-                                    data-service="Uốn">
-                                <div class="text-2xl mb-1">💫</div>
+                            <button type="button" class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center" data-service="Uốn">
+                                <div class="text-2xl mb-1">➿</div>
                                 <div class="text-xs font-medium">Uốn</div>
                             </button>
-                            <button type="button" 
-                                    class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center"
-                                    data-service="Nhuộm">
+                            <button type="button" class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center" data-service="Nhuộm">
                                 <div class="text-2xl mb-1">🎨</div>
                                 <div class="text-xs font-medium">Nhuộm</div>
                             </button>
-                            <button type="button" 
-                                    class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center"
-                                    data-service="Tẩy">
-                                <div class="text-2xl mb-1">⚪</div>
+                            <button type="button" class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center" data-service="Tẩy">
+                                <div class="text-2xl mb-1">✨</div>
                                 <div class="text-xs font-medium">Tẩy</div>
                             </button>
-                            <button type="button" 
-                                    class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center"
-                                    data-service="other">
-                                <div class="text-2xl mb-1">📝</div>
+                            <button type="button" class="service-btn p-3 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 transition-all text-center" data-service="other">
+                                <div class="text-2xl mb-1">⋯</div>
                                 <div class="text-xs font-medium">Khác</div>
                             </button>
                         </div>
                         <input type="hidden" id="service" name="service" required>
-                        
+
                         <!-- Other service input -->
-                        <input type="text" 
-                               id="otherService" 
-                               name="otherService"
-                               class="mt-3 w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent hidden"
-                               placeholder="Nhập tên dịch vụ...">
+                        <input type="text" id="otherService" name="otherService" class="mt-3 w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent hidden" placeholder="Nhập tên dịch vụ...">
                     </div>
-                    
+
                     <!-- Price Input -->
                     <div>
                         <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
                             Giá tiền (nghìn đồng) <span class="text-red-500">*</span>
                         </label>
                         <div class="relative">
-                            <input type="text" 
-                                   id="price" 
-                                   name="price"
-                                   required
-                                   inputmode="numeric"
-                                   pattern="[0-9,.]*"
-                                   class="w-full px-4 py-2.5 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                   placeholder="Nhập số">
+                            <input type="text" id="price" name="price" required inputmode="numeric" pattern="[0-9,.]*" class="w-full px-4 py-2.5 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Nhập số">
                             <span class="absolute right-4 top-3 text-gray-500 font-medium text-sm">.000 VNĐ</span>
                         </div>
                         <p class="text-xs text-gray-500 mt-1">Nhập số tiền (đơn vị nghìn đồng, tối đa 50 triệu)</p>
@@ -200,22 +158,15 @@
                             <button type="button" onclick="setQuickPrice(500)" class="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition">500k</button>
                         </div>
                     </div>
-                    
+
                     <!-- Notes -->
                     <div>
-                        <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
-                            Ghi chú
-                        </label>
-                        <textarea id="notes" 
-                                  name="notes"
-                                  rows="2"
-                                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                                  placeholder="Thêm ghi chú nếu cần..."></textarea>
+                        <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">Ghi chú</label>
+                        <textarea id="notes" name="notes" rows="2" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none" placeholder="Thêm ghi chú nếu cần..."></textarea>
                     </div>
-                    
+
                     <!-- Submit Button -->
-                    <button type="submit" 
-                            class="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium py-3 rounded-lg hover:from-violet-700 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2">
+                    <button type="submit" class="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium py-3 rounded-lg hover:from-violet-700 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
@@ -239,42 +190,38 @@
                     <div class="text-xs text-gray-600 mt-1">Doanh thu tháng</div>
                 </div>
             </div>
-            
+
             <!-- Today's Orders List -->
             <div class="bg-white rounded-xl shadow-sm p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-800 flex items-center">
-                        <span class="mr-2">📋</span> Đơn hàng hôm nay
+                        <span class="mr-2">🗒️</span> Đơn hàng hôm nay
                     </h2>
                     <div class="flex items-center space-x-2">
                         <button id="advancedSearchToggle" class="text-gray-600 hover:bg-gray-50 p-2 rounded-lg transition text-sm" onclick="toggleAdvancedSearch()">
-                            🔽 Tìm kiếm nâng cao
+                            Tìm kiếm nâng cao
                         </button>
-                        <button id="refreshBtn" class="text-purple-600 hover:bg-purple-50 p-2 rounded-lg transition">
+                        <button id="refreshBtn" class="text-purple-600 hover:bg-purple-50 p-2 rounded-lg transition" title="Làm mới">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
                         </button>
                     </div>
                 </div>
-                
-                <!-- Search Bar -->
+
+                <!-- Search Bar (hidden by CSS/JS) -->
                 <div class="mb-4">
                     <div class="relative">
-                        <input type="text" 
-                               id="searchInput" 
-                               class="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                               placeholder="Tìm kiếm đơn hàng, dịch vụ, ghi chú...">
+                        <input type="text" id="searchInput" class="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Tìm kiếm đơn hàng, dịch vụ, ghi chú...">
                         <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
                 </div>
-                
-                <!-- Advanced Search Panel -->
+
+                <!-- Advanced Search Panel (hidden by default) -->
                 <div id="advancedSearchPanel" class="hidden mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <!-- Date Filter -->
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Thời gian</label>
                             <select id="dateFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
@@ -285,16 +232,12 @@
                                 <option value="all">Tất cả</option>
                             </select>
                         </div>
-                        
-                        <!-- Service Filter -->
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Dịch vụ</label>
                             <select id="serviceFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
                                 <option value="all">Tất cả dịch vụ</option>
                             </select>
                         </div>
-                        
-                        <!-- Employee Filter -->
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Nhân viên</label>
                             <select id="employeeFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
@@ -302,9 +245,7 @@
                             </select>
                         </div>
                     </div>
-                    
                     <div class="flex justify-between items-center">
-                        <!-- Sort Options -->
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Sắp xếp theo</label>
                             <select id="sortOptions" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
@@ -316,21 +257,14 @@
                                 <option value="employee">Nhân viên A-Z</option>
                             </select>
                         </div>
-                        
-                        <!-- Clear Button -->
-                        <button id="clearSearch" 
-                                class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition"
-                                onclick="clearSearch()">
-                            🗑️ Xóa bộ lọc
-                        </button>
+                        <button id="clearSearch" class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition" onclick="clearSearch()">Xóa bộ lọc</button>
                     </div>
                 </div>
-                
-                <!-- Search Stats -->
+
+                <!-- Search Stats (hidden) -->
                 <div id="searchStats" class="mb-4"></div>
-                
+
                 <div id="ordersList" class="space-y-3">
-                    <!-- Orders will be dynamically added here -->
                     <div class="text-center py-8 text-gray-500">
                         <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -341,7 +275,7 @@
             </div>
         </main>
     </div>
-    
+
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl p-6 flex flex-col items-center">
@@ -349,7 +283,7 @@
             <p class="mt-4 text-gray-700">Đang xử lý...</p>
         </div>
     </div>
-    
+
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 right-4 transform translate-x-full transition-transform duration-300 z-50 hidden">
         <div class="bg-white rounded-lg shadow-xl p-4 flex items-center space-x-3 min-w-[300px]">
@@ -359,20 +293,18 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Update Banner (PWA) -->
     <div id="updateBanner" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 hidden">
         <div class="bg-white rounded-lg shadow-xl p-3 sm:p-4 flex items-center space-x-3 border border-purple-200">
             <span class="text-sm text-gray-800">Có bản cập nhật — Tải lại để áp dụng.</span>
-            <button id="reloadAppBtn" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-3 py-1.5 rounded">
-                Tải lại
-            </button>
+            <button id="reloadAppBtn" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-3 py-1.5 rounded">Tải lại</button>
         </div>
     </div>
-    
+
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
+
     <!-- Load config and app scripts -->
     <script src="config.js"></script>
     <script src="js/auth.js"></script>

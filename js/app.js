@@ -957,3 +957,50 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+// Normalize legacy mojibake Vietnamese in messages and wrap showToast
+(function wrapShowToast() {
+    try {
+        const orig = showToast;
+        function normalizeVN(s) {
+            try {
+                return String(s || '')
+                    .replace(/Vui lA�ng/gi, 'Vui lòng')
+                    .replace(/Nh��-p/gi, 'Nhập')
+                    .replace(/d��<ch v���|d��<ch v��̀|d��<ch/gi, 'dịch vụ')
+                    .replace(/GiA�/g, 'Giá')
+                    .replace(/khA'ng/gi, 'không')
+                    .replace(/tri���u/gi, 'triệu')
+                    .replace(/th��- l���i/gi, 'thử lại')
+                    .replace(/�`��n hA�ng/gi, 'đơn hàng')
+                    .replace(/�`��ng nh��-p/gi, 'đăng nhập')
+                    .replace(/nA�t/gi, 'nút')
+                    .replace(/th���y/gi, 'thấy')
+                    .replace(/tA�m/gi, 'tìm')
+                    .replace(/ngA�y/gi, 'ngày')
+                    .replace(/L��u/gi, 'Lưu')
+                    .replace(/�?ang/gi, 'Đang')
+                    .replace(/�?��ng xu���t/gi, 'Đăng xuất');
+            } catch (_) {
+                return s;
+            }
+        }
+        // Override the global function identifier (use our own UI update)
+        window.showToast = function(message, type = 'info') {
+            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            const msg = normalizeVN(message);
+            try {
+                elements.toastIcon.textContent = icons[type] || '';
+                elements.toastMessage.textContent = msg;
+                elements.toast.classList.remove('hidden');
+                elements.toast.classList.add('toast-show');
+                setTimeout(() => {
+                    elements.toast.classList.remove('toast-show');
+                    setTimeout(() => { elements.toast.classList.add('hidden'); }, 320);
+                }, 3000);
+            } catch (_) {
+                try { orig(msg, type); } catch (_) { /* ignore */ }
+            }
+        };
+    } catch (_) {}
+})();
+

@@ -114,8 +114,6 @@ button, [role="button"] {
     display: none;
 }
 
-/* Removed fallback manual login button styles (loginBtn) */
-
 /* Input focus effects */
 input:focus, 
 textarea:focus, 
@@ -146,17 +144,10 @@ body {
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
-    /* Smaller padding on mobile */
     .container {
         padding-left: 1rem;
         padding-right: 1rem;
     }
-    /* Removed forced full-width buttons on mobile to prevent oversized delete button */
-}
-
-/* Dark mode support (if needed in future) */
-@media (prefers-color-scheme: dark) {
-    /* Dark mode styles can be added here */
 }
 
 /* Hide search UI (kept simple; no search) */
@@ -167,8 +158,6 @@ body {
 #searchInput {
     display: none !important;
 }
-
-/* Removed offline indicator styles */
 
 /* Service button styles */
 .service-btn {
@@ -202,22 +191,12 @@ body {
 
 /* Success animation */
 @keyframes success {
-    0% {
-        transform: scale(0);
-        opacity: 0;
-    }
-    50% {
-        transform: scale(1.2);
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
 }
 
-.success-icon {
-    animation: success 0.5s ease-out;
-}
+.success-icon { animation: success 0.5s ease-out; }
 
 /* Number formatting */
 .currency::before {
@@ -232,3 +211,4 @@ body {
         gap: 0.75rem;
     }
 }
+
