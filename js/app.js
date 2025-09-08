@@ -86,23 +86,36 @@ const APP_STATE = {
 // DOM Elements
 let elements = {};
 
-// Initialize App
-document.addEventListener('DOMContentLoaded', () => {
-    initializeElements();
-    // Remove search UI for simplified app
-    removeSearchUI();
-    setupEventListeners();
-    
-    // Delay to ensure all modules are loaded
-    setTimeout(() => {
-        initializeAuth();
-    }, 500); // Increased delay for AUTH module
-    
-    updateDateTime();
-    
-    // Update date/time every minute
-    setInterval(updateDateTime, 60000);
-});
+// Initialize App (works even if DOMContentLoaded already fired)
+function bootstrapApp() {
+    if (window.__APP_BOOTSTRAPPED__) return;
+    window.__APP_BOOTSTRAPPED__ = true;
+
+    try {
+        initializeElements();
+        // Remove search UI for simplified app
+        removeSearchUI();
+        setupEventListeners();
+
+        // Delay to ensure all modules are loaded
+        setTimeout(() => {
+            try { initializeAuth(); } catch (e) { console.warn('Auth init error:', e); }
+        }, 500);
+
+        updateDateTime();
+        // Update date/time every minute
+        setInterval(updateDateTime, 60000);
+    } catch (err) {
+        console.error('Bootstrap error:', err);
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapApp);
+} else {
+    // DOM already ready (e.g., scripts loaded dynamically) → bootstrap immediately
+    setTimeout(bootstrapApp, 0);
+}
 
 // Remove search and filter UI elements (keep app simple)
 function removeSearchUI() {

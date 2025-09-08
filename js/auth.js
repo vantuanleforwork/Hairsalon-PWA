@@ -40,14 +40,47 @@ window.initAuth = function(callbacks = {}) {
         localStorage.removeItem('user');
     }
 
+    // Helper: robustly wait for GIS availability even if window 'load' already fired
+    function waitForGoogleAndInit(maxAttempts = 40, intervalMs = 250) {
+        let attempts = 0;
+        const timer = setInterval(() => {
+            attempts++;
+            if (typeof google !== 'undefined' && google.accounts) {
+                clearInterval(timer);
+                initializeGoogleSignIn();
+            } else if (attempts >= maxAttempts) {
+                clearInterval(timer);
+                console.warn('Google API không sẵn sàng sau khi chờ. Thử lại khi người dùng tương tác.');
+            }
+        }, intervalMs);
+    }
+
     // Initialize Google Sign-In when API is ready
     if (typeof google !== 'undefined' && google.accounts) {
         initializeGoogleSignIn();
     } else {
-        // Wait for Google API to load
         console.log('Đang chờ Google API...');
-        window.addEventListener('load', () => {
-            setTimeout(initializeGoogleSignIn, 800);
+        // If load already fired, still try polling
+        if (document.readyState === 'complete') {
+            waitForGoogleAndInit();
+        } else {
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    if (typeof google !== 'undefined' && google.accounts) {
+                        initializeGoogleSignIn();
+                    } else {
+                        waitForGoogleAndInit();
+                    }
+                }, 500);
+            });
+        }
+        // Also retry when tab becomes visible (PWA foreground)
+        document.addEventListener('visibilitychange', () => {
+            if (!window.AUTH_STATE.initialized && document.visibilityState === 'visible') {
+                if (typeof google !== 'undefined' && google.accounts) {
+                    initializeGoogleSignIn();
+                }
+            }
         });
     }
 };
@@ -145,6 +178,24 @@ function initializeGoogleSignIn() {
                     } catch (_) {}
                 }, 200);
             });
+            // Safety: if button not present after a while, try once more
+            setTimeout(() => {
+                if (!buttonContainer.querySelector('div[role="button"]')) {
+                    try {
+                        buttonContainer.innerHTML = '';
+                        const w2 = document.createElement('div');
+                        w2.style.width = '100%';
+                        w2.style.maxWidth = '400px';
+                        w2.style.margin = '0 auto';
+                        buttonContainer.appendChild(w2);
+                        let wpx = Math.round(w2.getBoundingClientRect().width || 0) || 360;
+                        wpx = Math.max(240, Math.min(wpx, 400));
+                        google.accounts.id.renderButton(w2, {
+                            type: 'standard', theme: 'outline', size: 'large', text: 'signin_with', width: wpx, locale: 'vi'
+                        });
+                    } catch (_) {}
+                }
+            }, 1200);
         }
 
     } catch (error) {
@@ -357,4 +408,3 @@ if (window.APP_CONFIG && window.APP_CONFIG.DEBUG_MODE) {
     console.log('Available methods:', Object.keys(window.AUTH));
     console.log('Client ID configured:', !!(window.APP_CONFIG.GOOGLE_CLIENT_ID));
 }
-
