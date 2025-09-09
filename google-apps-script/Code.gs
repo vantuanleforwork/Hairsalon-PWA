@@ -22,32 +22,16 @@ const CONFIG = {
   MAX_SERVICE_NAME_LENGTH: 100 // Maximum service name length
 };
 
-/** Ensure Employees sheet exists with proper headers */
-function initializeEmployeesSheet() {
+/** Lấy sheet "Nhân viên" (đảm bảo tồn tại và có header) */
+function getNhanVienSheet() {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  let sheet = ss.getSheetByName('Employees');
-  if (!sheet) {
-    sheet = ss.insertSheet('Employees');
-    sheet.getRange(1, 1, 1, 3).setValues([['Email', 'Tên nhân viên', 'Vai trò']]);
-    sheet.getRange(1, 1, 1, 3).setFontWeight('bold');
-    sheet.setFrozenRows(1);
-  }
-  return sheet;
-}
-
-/** Get Employees sheet (ensures it exists; rename to "Nhân viên") */
-function getEmployeesSheet() {
-  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  let sheet = ss.getSheetByName('Nhân viên') || ss.getSheetByName('Employees');
+  let sheet = ss.getSheetByName('Nhân viên');
   if (!sheet) {
     sheet = ss.insertSheet('Nhân viên');
     sheet.getRange(1, 1, 1, 3).setValues([['Email', 'Tên nhân viên', 'Vai trò']]);
     sheet.getRange(1, 1, 1, 3).setFontWeight('bold');
     sheet.setFrozenRows(1);
     return sheet;
-  }
-  if (sheet.getName() !== 'Nhân viên') {
-    sheet.setName('Nhân viên');
   }
   try {
     const newHeaders = ['Email', 'Tên nhân viên', 'Vai trò'];
@@ -56,9 +40,9 @@ function getEmployeesSheet() {
   return sheet;
 }
 
-/** Read allowed emails from Employees sheet */
+/** Đọc danh sách email được phép từ sheet "Nhân viên" */
 function getAllowedEmails() {
-  const sheet = getEmployeesSheet();
+  const sheet = getNhanVienSheet();
   const values = sheet.getDataRange().getValues();
   const emails = [];
   for (var i = 1; i < values.length; i++) {
@@ -69,10 +53,10 @@ function getAllowedEmails() {
   return emails;
 }
 
-/** Get employee name by email from Employees sheet */
+/** Lấy tên nhân viên theo email từ sheet "Nhân viên" */
 function getEmployeeNameByEmail(email) {
   if (!email) return '';
-  const sheet = getEmployeesSheet();
+  const sheet = getNhanVienSheet();
   const values = sheet.getDataRange().getValues();
   const target = String(email).toLowerCase();
   for (var i = 1; i < values.length; i++) {
@@ -235,7 +219,7 @@ function initializeSheet() {
   }
 
   // Ensure Employees sheet exists
-  initializeEmployeesSheet();
+  // Removed legacy "Employees" sheet; only using "Nhân viên" now.
   return sheet;
 }
 

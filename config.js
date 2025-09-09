@@ -43,7 +43,7 @@ const APP_CONFIG = {
 
     // Development mode
     DEBUG_MODE: false,
-    // Override: Bỏ dùng whitelist phía client, chỉ dùng Sheet Employees
+    // Override: Bỏ whitelist phía client, chỉ dùng sheet "Nhân viên" trên Google Sheets
     ALLOWED_EMAILS: null
 };
 
