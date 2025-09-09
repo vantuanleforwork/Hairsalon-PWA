@@ -12,13 +12,6 @@ const CONFIG = {
   SPREADSHEET_ID: '1dqxdNQTdIvf7mccYMW825Xiuck-vK3kOOcHkn-YCphU',
   SHEET_NAME: 'Đơn hàng',
   GOOGLE_CLIENT_ID: '36454863313-tlsos46mj2a63sa6k4hjralerarugtku.apps.googleusercontent.com',
-  ALLOWED_ORIGINS: [
-    'http://localhost:5500',
-    'http://127.0.0.1:5500',
-    'http://localhost:8080',
-    'http://127.0.0.1:8080',
-    'https://vantuanleforwork.github.io'
-  ],
   MAX_ORDERS_PER_REQUEST: 100
 };
 
@@ -201,7 +194,7 @@ function doGet(e) {
 
     return createResponse(result);
   } catch (error) {
-    return createResponse({ error: error.toString() }, 500);
+    return createResponse({ error: error.toString() });
   }
 }
 
@@ -223,11 +216,7 @@ function doPost(e) {
 
     var action = data.action || 'create';
 
-    // Check origin for CORS (best-effort)
-    var origin = (e && e.parameter && e.parameter.origin) || (e && e.headers && e.headers.Origin);
-    if (!isAllowedOrigin(origin)) {
-      return createResponse({ error: 'Unauthorized origin' });
-    }
+    // Origin check removed; rely on idToken verification
 
     // Verify idToken and get caller email
     var callerEmail = verifyIdToken((data && data.idToken) || (e && e.parameter && e.parameter.idToken));
@@ -255,7 +244,7 @@ function doPost(e) {
 
     return createResponse(result);
   } catch (error) {
-    return createResponse({ error: error.toString() }, 500);
+    return createResponse({ error: error.toString() });
   }
 }
 
@@ -465,14 +454,10 @@ function generateOrderId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
 
-/** Check if origin is allowed (CORS) */
-function isAllowedOrigin(origin) {
-  if (!origin) return true; // Allow if no origin (e.g., direct access)
-  return CONFIG.ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed));
-}
+// Origin allowlist removed
 
 /** Create JSON response */
-function createResponse(data, status) {
+function createResponse(data) {
   const output = ContentService.createTextOutput(JSON.stringify(data));
   output.setMimeType(ContentService.MimeType.JSON);
   return output;
