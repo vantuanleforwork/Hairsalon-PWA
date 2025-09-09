@@ -11,13 +11,8 @@ const CONFIG = {
   SPREADSHEET_ID: '1dqxdNQTdIvf7mccYMW825Xiuck-vK3kOOcHkn-YCphU', // Set by Codex
   SHEET_NAME: 'Orders',
   GOOGLE_CLIENT_ID: '36454863313-tlsos46mj2a63sa6k4hjralerarugtku.apps.googleusercontent.com',
-  // Server-side whitelist of allowed emails (update as needed)
-  ALLOWED_EMAILS: [
-    'vantuanleforwork@gmail.com',
-    'vantuanle2002@gmail.com',
-    'v4ntu4nl3@gmail.com',
-    'phonghominh8@gmail.com'
-  ],
+  // Không dùng nữa: quản lý email qua tab Employees
+  ALLOWED_EMAILS: [],
   ALLOWED_ORIGINS: [
     'http://localhost:5500',
     'http://127.0.0.1:5500',
@@ -29,12 +24,66 @@ const CONFIG = {
   TIMEZONE: 'Asia/Ho_Chi_Minh'
 };
 
+/**
+ * Ensure Employees sheet exists with proper headers and seeded rows.
+ * Returns the sheet instance.
+ */
+function initializeEmployeesSheet() {
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  let sheet = ss.getSheetByName('Employees');
+  if (!sheet) {
+    sheet = ss.insertSheet('Employees');
+    sheet.getRange(1, 1, 1, 4).setValues([[
+      'Email', 'Tên nhân viên', 'Kích hoạt', 'Vai trò'
+    ]]);
+    sheet.getRange(1, 1, 1, 4).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+/** Get Employees sheet (ensures it exists) */
+function getEmployeesSheet() {
+  return initializeEmployeesSheet();
+}
+
+/** Read allowed (active) emails from Employees sheet */
+function getAllowedEmails() {
+  const sheet = getEmployeesSheet();
+  const values = sheet.getDataRange().getValues();
+  const emails = [];
+  for (var i = 1; i < values.length; i++) {
+    var row = values[i];
+    var email = row[0]; // Email
+    var active = row[2]; // Kích hoạt
+    if (email && (active === true || String(active).toLowerCase() === 'true' || String(active).trim() === '1' || String(active).toLowerCase() === 'yes')) {
+      emails.push(String(email).toLowerCase());
+    }
+  }
+  return emails;
+}
+
+/** Lấy tên nhân viên theo email từ tab Employees */
+function getEmployeeNameByEmail(email) {
+  if (!email) return '';
+  const sheet = getEmployeesSheet();
+  const values = sheet.getDataRange().getValues();
+  const target = String(email).toLowerCase();
+  for (var i = 1; i < values.length; i++) {
+    var row = values[i];
+    if (String(row[0]).toLowerCase() === target) {
+      return row[1] || '';
+    }
+  }
+  return '';
+}
+
 /** Check if email is allowed (server-side) */
 function isAllowedEmail(email) {
   if (!email) return false;
   var e = String(email).toLowerCase();
-  var list = (CONFIG && CONFIG.ALLOWED_EMAILS) || [];
-  return list.some(function(x){ return String(x).toLowerCase() === e; });
+  var list = getAllowedEmails();
+  return list.indexOf(e) >= 0;
 }
 
 /** Verify Google ID Token and return email (or null) */
@@ -55,17 +104,15 @@ function verifyIdToken(idToken) {
   }
 }
 
-// Column indices (0-based)
+// Column indices (0-based) - ĐÃ BỎ H, I, J
 const COLUMNS = {
-  ID: 0,           // A
-  TIMESTAMP: 1,    // B
-  EMPLOYEE: 2,     // C
-  SERVICE: 3,      // D
-  PRICE: 4,        // E
-  NOTES: 5,        // F
-  STATUS: 6,       // G
-  CREATED_BY: 7,   // H
-  MODIFIED_AT: 8   // I
+  ID: 0,              // A
+  TIMESTAMP: 1,       // B
+  EMPLOYEE: 2,        // C (email)
+  EMPLOYEE_NAME: 3,   // D (tên nhân viên)
+  SERVICE: 4,         // E
+  PRICE: 5,           // F
+  NOTES: 6            // G
 };
 
 /**
@@ -79,19 +126,47 @@ function initializeSheet() {
     sheet = ss.insertSheet(CONFIG.SHEET_NAME);
     const headers = [
       'ID',
-      'Timestamp',
-      'Employee',
-      'Service',
-      'Price',
-      'Notes',
-      'Status',
-      'Created By',
-      'Modified At'
+      'Thời gian',
+      'Email nhân viên',
+      'Tên nhân viên',
+      'Dịch vụ',
+      'Giá',
+      'Ghi chú'
     ];
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
     sheet.setFrozenRows(1);
+  } else {
+    // Migration: nếu chưa có cột "Tên nhân viên", chèn cột D và đặt tiêu đề
+    const firstRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    var hasNameCol = false;
+    for (var i = 0; i < firstRow.length; i++) {
+      if (String(firstRow[i]).toLowerCase().indexOf('tên nhân viên') >= 0) { hasNameCol = true; break; }
+    }
+    if (!hasNameCol) {
+      sheet.insertColumnAfter(3);
+      sheet.getRange(1, 4).setValue('Tên nhân viên');
+    }
+    // Bỏ các cột H, I, J nếu tồn tại (Status/Created By/Modified At cũ)
+    var lastCol = sheet.getLastColumn();
+    if (lastCol >= 8) {
+      // Xóa từ phải sang trái để không dịch chỉ số cột chưa xóa
+      // Nếu có J (10)
+      if (sheet.getLastColumn() >= 10) {
+        sheet.deleteColumn(10);
+      }
+      // Nếu có I (9)
+      if (sheet.getLastColumn() >= 9) {
+        sheet.deleteColumn(9);
+      }
+      // Nếu có H (8)
+      if (sheet.getLastColumn() >= 8) {
+        sheet.deleteColumn(8);
+      }
+    }
   }
+  // Ensure Employees sheet exists
+  initializeEmployeesSheet();
   
   return sheet;
 }
@@ -215,20 +290,20 @@ function createOrder(data) {
   // Use Date object for stable storage and ISO for API response
   const now = new Date();
   const timestampISO = now.toISOString();
-  var createdBy = (data && data._email) || (data && data.createdBy) || (data && data.employee) || 'Unknown';
+  var caller = (data && data._email) || (data && data.createdBy) || (data && data.employee) || 'unknown@local';
+  // Force employee = caller email để đảm bảo quyền sở hữu
+  var employeeEmail = String(caller).toLowerCase();
+  var employeeName = getEmployeeNameByEmail(employeeEmail) || '';
   
   const newRow = [
     id,
     // Store Date object in sheet for reliable sorting/filtering
     now,
-    data.employee || createdBy || 'Unknown',
+    employeeEmail,
+    employeeName,
     data.service || '',
     data.price || 0,
-    data.notes || '',
-    'active',
-    createdBy,
-    // Modified At as Date object as well
-    now
+    data.notes || ''
   ];
   
   sheet.appendRow(newRow);
@@ -239,11 +314,11 @@ function createOrder(data) {
       id: id,
       // Return ISO string to clients
       timestamp: timestampISO,
-      employee: data.employee || createdBy,
+      employee: employeeEmail,
+      employeeName: employeeName,
       service: data.service,
       price: data.price,
-      notes: data.notes,
-      status: 'active'
+      notes: data.notes
     }
   };
 }
@@ -283,11 +358,8 @@ function getOrders(params) {
   for (var i = data.length - 1; i >= 1; i--) {
     var row = data[i];
     
-    // Skip deleted rows
-    if (row[COLUMNS.STATUS] === 'deleted') continue;
-
-    // Enforce ownership
-    if (requester && String(row[COLUMNS.CREATED_BY]).toLowerCase() !== String(requester).toLowerCase()) {
+    // Enforce ownership theo email nhân viên
+    if (requester && String(row[COLUMNS.EMPLOYEE]).toLowerCase() !== String(requester).toLowerCase()) {
       continue;
     }
 
@@ -316,10 +388,10 @@ function getOrders(params) {
       id: row[COLUMNS.ID],
       timestamp: row[COLUMNS.TIMESTAMP],
       employee: row[COLUMNS.EMPLOYEE],
+      employeeName: row[COLUMNS.EMPLOYEE_NAME],
       service: row[COLUMNS.SERVICE],
       price: row[COLUMNS.PRICE],
-      notes: row[COLUMNS.NOTES],
-      status: row[COLUMNS.STATUS]
+      notes: row[COLUMNS.NOTES]
     });
 
     if (orders.length >= limit) break;
@@ -363,8 +435,7 @@ function getStats(params) {
   // Iterate from newest to oldest; break when older than current month
   for (var i = data.length - 1; i >= 1; i--) {
     var row = data[i];
-    if (row[COLUMNS.STATUS] === 'deleted') continue;
-    if (requester && String(row[COLUMNS.CREATED_BY]).toLowerCase() !== String(requester).toLowerCase()) continue;
+    if (requester && String(row[COLUMNS.EMPLOYEE]).toLowerCase() !== String(requester).toLowerCase()) continue;
 
     var ts = row[COLUMNS.TIMESTAMP];
     if (!(ts instanceof Date)) ts = new Date(ts);
@@ -408,34 +479,8 @@ function getStats(params) {
  * Update an order (mainly for marking as deleted)
  */
 function updateOrder(data) {
-  const sheet = initializeSheet();
-  const dataRange = sheet.getDataRange();
-  const values = dataRange.getValues();
-  
-  for (let i = 1; i < values.length; i++) {
-    if (values[i][COLUMNS.ID] === data.id) {
-      // Only owner can mark as deleted
-      var rowOwner = values[i][COLUMNS.CREATED_BY];
-      if (data && data._email && String(rowOwner).toLowerCase() !== String(data._email).toLowerCase()) {
-        return { success: false, error: 'Forbidden' };
-      }
-      // Update status to deleted (soft delete)
-      sheet.getRange(i + 1, COLUMNS.STATUS + 1).setValue('deleted');
-      // Use Date object for Modified At
-      sheet.getRange(i + 1, COLUMNS.MODIFIED_AT + 1).setValue(new Date());
-      
-      return {
-        success: true,
-        message: 'Order marked as deleted',
-        id: data.id
-      };
-    }
-  }
-  
-  return {
-    success: false,
-    error: 'Order not found'
-  };
+  // Không hỗ trợ cập nhật trạng thái khi đã bỏ các cột H/I/J
+  return { success: false, error: 'Not supported' };
 }
 
 /**
@@ -448,8 +493,8 @@ function deleteOrder(data) {
 
   for (var i = 1; i < values.length; i++) {
     if (values[i][COLUMNS.ID] === data.id) {
-      // Only owner can delete
-      if (requester && String(values[i][COLUMNS.CREATED_BY]).toLowerCase() !== String(requester).toLowerCase()) {
+      // Chỉ cho phép nhân viên (theo email) xóa đơn của chính họ
+      if (requester && String(values[i][COLUMNS.EMPLOYEE]).toLowerCase() !== String(requester).toLowerCase()) {
         return { success: false, error: 'Forbidden' };
       }
       sheet.deleteRow(i + 1);

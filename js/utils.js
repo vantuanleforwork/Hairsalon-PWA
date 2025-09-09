@@ -58,7 +58,7 @@ window.saveOrderRealtime = async function(order) {
             price: typeof raw.price !== 'undefined' ? parseInt(raw.price) : order.price,
             notes: typeof raw.notes !== 'undefined' ? raw.notes : order.notes,
             employee: raw.employee || order.employee,
-            status: raw.status || 'active'
+            employeeName: raw.employeeName || ''
         };
 
         if (typeof window.showToast === 'function') showToast('Đã lưu đơn hàng thành công', 'success');

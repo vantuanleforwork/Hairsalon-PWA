@@ -292,8 +292,7 @@ async function handleOrderSubmit(e) {
         service: service,
         price: price,
         notes: notes,
-        employee: APP_STATE.user?.email || 'unknown',
-        status: 'active'
+        employee: APP_STATE.user?.email || 'unknown'
     };
     
     // Show loading
@@ -431,6 +430,7 @@ function addOrderToList(order) {
                     </div>
                     <div class="font-medium text-gray-800">${order?.service || '—'}</div>
                     <div class="text-green-600 font-semibold">${formatCurrency(order?.price || 0)}</div>
+                    ${order?.employeeName ? `<div class="text-sm text-gray-600 mt-1">👤 ${order.employeeName}</div>` : ''}
                     ${order?.notes ? `<div class="text-sm text-gray-500 mt-1">${order.notes}</div>` : ''}
                 </div>
                 <button onclick="onDeleteOrderClick('${order?.id || ''}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition">
@@ -527,7 +527,7 @@ async function refreshOrders() {
                     price: parsePrice(order.price),
                     notes: order.notes || '',
                     employee: order.employee || 'unknown',
-                    status: order.status || 'active'
+                    employeeName: order.employeeName || ''
                 }));
                 
                 // Client-side filter: only by today to ensure visibility

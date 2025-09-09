@@ -6,13 +6,12 @@ const APP_CONFIG = {
 
     // Google Apps Script Web App URL (sau khi deploy)
     API_BASE_URL: 'https://script.google.com/macros/s/AKfycbwGxJEgFyVAHWm9nEMfJALkLqC5WagTh14JRaVQLtFG1HG7Er2xAgKQMNuf1K_W1mQS/exec',
+    // Frontend whitelist enforcement (false: chỉ kiểm tra trên server)
+    ENFORCE_CLIENT_WHITELIST: false,
 
     // Danh sách email được phép truy cập (whitelist)
-    ALLOWED_EMAILS: [
+    LEGACY_ALLOWED_EMAILS: [
         'vantuanleforwork@gmail.com',
-        'vantuanle2002@gmail.com',
-        'v4ntu4nl3@gmail.com',
-        'phonghominh8@gmail.com'
         // Thêm email nếu cần
     ],
 
@@ -43,7 +42,9 @@ const APP_CONFIG = {
     PRODUCTION_URL: 'https://vantuanleforwork.github.io/Hairsalon-PWA/',
 
     // Development mode
-    DEBUG_MODE: false
+    DEBUG_MODE: false,
+    // Override: Bỏ dùng whitelist phía client, chỉ dùng Sheet Employees
+    ALLOWED_EMAILS: null
 };
 
 // Freeze config to prevent modifications
