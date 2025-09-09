@@ -1,84 +1,62 @@
-/**
+﻿/**
  * Salon Manager - Google Apps Script Backend
- * Version: 1.0.0
- * 
- * This script serves as the backend API for the Salon Manager PWA
- * It handles CRUD operations with Google Sheets as the database
+ * Version: 1.0.1
+ *
+ * Backend API for the Salon Manager PWA
+ * - Uses Google Sheets as the database
+ * - Vietnamese headers per request: Timestamp → Thời gian, Employee → Email nhân viên, Tên nhân viên (unchanged), Service → Dịch vụ, Price → Giá, Notes → Ghi chú
  */
 
 // Configuration
 const CONFIG = {
-  SPREADSHEET_ID: '1dqxdNQTdIvf7mccYMW825Xiuck-vK3kOOcHkn-YCphU', // Set by Codex
+  SPREADSHEET_ID: '1dqxdNQTdIvf7mccYMW825Xiuck-vK3kOOcHkn-YCphU',
   SHEET_NAME: 'Đơn hàng',
   GOOGLE_CLIENT_ID: '36454863313-tlsos46mj2a63sa6k4hjralerarugtku.apps.googleusercontent.com',
-  // Không dùng nữa: quản lý email qua tab Employees
-  ALLOWED_EMAILS: [],
   ALLOWED_ORIGINS: [
     'http://localhost:5500',
     'http://127.0.0.1:5500',
     'http://localhost:8080',
     'http://127.0.0.1:8080',
-    'https://vantuanleforwork.github.io' // Replace with your GitHub Pages URL
+    'https://vantuanleforwork.github.io'
   ],
-  MAX_ORDERS_PER_REQUEST: 100,
-  TIMEZONE: 'Asia/Ho_Chi_Minh'
+  MAX_ORDERS_PER_REQUEST: 100
 };
 
-/**
- * Ensure Employees sheet exists with proper headers and seeded rows.
- * Returns the sheet instance.
- */
+/** Ensure Employees sheet exists with proper headers */
 function initializeEmployeesSheet() {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   let sheet = ss.getSheetByName('Employees');
   if (!sheet) {
     sheet = ss.insertSheet('Employees');
-    sheet.getRange(1, 1, 1, 4).setValues([[
-      'Email', 'Tên nhân viên', 'Kích hoạt', 'Vai trò'
-    ]]);
-    sheet.getRange(1, 1, 1, 4).setFontWeight('bold');
+    sheet.getRange(1, 1, 1, 3).setValues([['Email', 'Tên nhân viên', 'Vai trò']]);
+    sheet.getRange(1, 1, 1, 3).setFontWeight('bold');
     sheet.setFrozenRows(1);
-  try { var __vn = [''ID'',''Th?i gian'',''Email nh�n vi�n'',''T�n nh�n vi�n'',''D?ch v?'',''Gi�'',''Ghi ch�'']; sheet.getRange(1,1,1,__vn.Length).setValues([__vn]); } catch(e) {}
-    // Force Vietnamese headers on creation
-    try {
-      var __vn = ['ID','Thời gian','Email nhân viên','Tên nhân viên','Dịch vụ','Giá','Ghi chú'];
-      sheet.getRange(1, 1, 1, __vn.length).setValues([__vn]);
-    } catch (e) {}
   }
   return sheet;
 }
 
-/** Get Employees sheet (ensures it exists, migrate tên + cột) */
+/** Get Employees sheet (ensures it exists; rename to "Nhân viên") */
 function getEmployeesSheet() {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   let sheet = ss.getSheetByName('Nhân viên') || ss.getSheetByName('Employees');
   if (!sheet) {
     sheet = ss.insertSheet('Nhân viên');
-    sheet.getRange(1, 1, 1, 3).setValues([[ 'Email', 'Tên nhân viên', 'Vai trò' ]] );
+    sheet.getRange(1, 1, 1, 3).setValues([['Email', 'Tên nhân viên', 'Vai trò']]);
     sheet.getRange(1, 1, 1, 3).setFontWeight('bold');
     sheet.setFrozenRows(1);
-  try { var __vn = [''ID'',''Th?i gian'',''Email nh�n vi�n'',''T�n nh�n vi�n'',''D?ch v?'',''Gi�'',''Ghi ch�'']; sheet.getRange(1,1,1,__vn.Length).setValues([__vn]); } catch(e) {}
     return sheet;
   }
   if (sheet.getName() !== 'Nhân viên') {
     sheet.setName('Nhân viên');
   }
-  // Migration: xóa cột 'Kích hoạt' nếu còn, chuẩn hóa tiêu đề 3 cột đầu
   try {
-    const header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    for (var i = header.length - 1; i >= 0; i--) {
-      var h = String(header[i]).trim().toLowerCase();
-      if (h === 'kích hoạt' || h === 'kich hoat' || h === 'active') {
-        sheet.deleteColumn(i + 1);
-      }
-    }
     const newHeaders = ['Email', 'Tên nhân viên', 'Vai trò'];
     sheet.getRange(1, 1, 1, newHeaders.length).setValues([newHeaders]);
   } catch (e) {}
   return sheet;
 }
 
-/** Read allowed (active) emails from Employees sheet */
+/** Read allowed emails from Employees sheet */
 function getAllowedEmails() {
   const sheet = getEmployeesSheet();
   const values = sheet.getDataRange().getValues();
@@ -86,15 +64,12 @@ function getAllowedEmails() {
   for (var i = 1; i < values.length; i++) {
     var row = values[i];
     var email = row[0]; // Email
-    var active = row[2]; // Kích hoạt
-    if (email) {
-      emails.push(String(email).toLowerCase());
-    }
+    if (email) emails.push(String(email).toLowerCase());
   }
   return emails;
 }
 
-/** Lấy tên nhân viên theo email từ tab Employees */
+/** Get employee name by email from Employees sheet */
 function getEmployeeNameByEmail(email) {
   if (!email) return '';
   const sheet = getEmployeesSheet();
@@ -135,7 +110,7 @@ function verifyIdToken(idToken) {
   }
 }
 
-// Column indices (0-based) - ĐÃ BỎ H, I, J
+// Column indices (0-based)
 const COLUMNS = {
   ID: 0,              // A
   TIMESTAMP: 1,       // B
@@ -146,9 +121,7 @@ const COLUMNS = {
   NOTES: 6            // G
 };
 
-/**
- * Initialize the spreadsheet with headers if empty
- */
+/** Initialize the order sheet with headers if missing */
 function initializeSheet() {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   let sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
@@ -159,25 +132,16 @@ function initializeSheet() {
       sheet = legacy;
     }
   }
-  
+
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.SHEET_NAME);
-    const headers = [
-      'ID',
-      'Thời gian',
-      'Email nhân viên',
-      'Tên nhân viên',
-      'Dịch vụ',
-      'Giá',
-      'Ghi chú'
-    ];
+    const headers = ['ID', 'Thời gian', 'Email nhân viên', 'Tên nhân viên', 'Dịch vụ', 'Giá', 'Ghi chú'];
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
     sheet.setFrozenRows(1);
-  try { var __vn = [''ID'',''Th?i gian'',''Email nh�n vi�n'',''T�n nh�n vi�n'',''D?ch v?'',''Gi�'',''Ghi ch�'']; sheet.getRange(1,1,1,__vn.Length).setValues([__vn]); } catch(e) {}
   } else {
-    // Migration: nếu chưa có cột "Tên nhân viên", chèn cột D và đặt tiêu đề
-    const firstRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    // Ensure column D exists and is labeled
+    const firstRow = sheet.getRange(1, 1, 1, Math.max(7, sheet.getLastColumn())).getValues()[0];
     var hasNameCol = false;
     for (var i = 0; i < firstRow.length; i++) {
       if (String(firstRow[i]).toLowerCase().indexOf('tên nhân viên') >= 0) { hasNameCol = true; break; }
@@ -186,50 +150,34 @@ function initializeSheet() {
       sheet.insertColumnAfter(3);
       sheet.getRange(1, 4).setValue('Tên nhân viên');
     }
-    // Bỏ các cột H, I, J nếu tồn tại (Status/Created By/Modified At cũ)
-    var lastCol = sheet.getLastColumn();
-    if (lastCol >= 8) {
-      // Xóa từ phải sang trái để không dịch chỉ số cột chưa xóa
-      // Nếu có J (10)
-      if (sheet.getLastColumn() >= 10) {
-        sheet.deleteColumn(10);
-      }
-  try { var __vn2 = ['ID','Th?i gian','Email nh�n vi�n','T�n nh�n vi�n','D?ch v?','Gi�','Ghi ch�']; sheet.getRange(1,1,1,__vn2.Length).setValues([__vn2]); } catch(e) {}
-      // Nếu có I (9)
-      if (sheet.getLastColumn() >= 9) {
-        sheet.deleteColumn(9);
-      }
-      // Nếu có H (8)
-      if (sheet.getLastColumn() >= 8) {
-        sheet.deleteColumn(8);
-      }
-    }
+    // Trim optional extra columns H-J if present
+    if (sheet.getLastColumn() >= 10) sheet.deleteColumn(10);
+    if (sheet.getLastColumn() >= 9) sheet.deleteColumn(9);
+    if (sheet.getLastColumn() >= 8) sheet.deleteColumn(8);
   }
+
   // Ensure Employees sheet exists
   initializeEmployeesSheet();
-  
   return sheet;
 }
 
-/**
- * Handle GET requests
- */
+/** Handle GET requests */
 function doGet(e) {
   try {
-    const params = e.parameter;
+    const params = e && e.parameter ? e.parameter : {};
     const action = params.action || 'orders';
 
     // Require valid idToken for protected endpoints
     if (action !== 'health') {
       var email = verifyIdToken(params && params.idToken);
-      if (!email) return createResponse({ error: 'Unauthorized' }, 401);
-      if (!isAllowedEmail(email)) return createResponse({ error: 'Forbidden' }, 403);
+      if (!email) return createResponse({ error: 'Unauthorized' });
+      if (!isAllowedEmail(email)) return createResponse({ error: 'Forbidden' });
       // attach for downstream filtering
       params._email = email;
     }
-    
+
     let result;
-    switch(action) {
+    switch (action) {
       case 'orders':
         result = getOrders(params);
         break;
@@ -242,6 +190,7 @@ function doGet(e) {
       default:
         result = { error: 'Invalid action' };
     }
+
     // Support JSONP to bypass CORS for static frontends
     if (params && params.callback) {
       var cb = String(params.callback).replace(/[^\w\.$]/g, '');
@@ -252,29 +201,23 @@ function doGet(e) {
 
     return createResponse(result);
   } catch (error) {
-    console.error('Error in doGet:', error);
     return createResponse({ error: error.toString() }, 500);
   }
 }
 
-/**
- * Handle POST requests
- */
+/** Handle POST requests */
 function doPost(e) {
   try {
+    // Try to parse JSON body first; fallback to form-encoded
     var data = {};
     try {
-      var ct = (e && e.postData && e.postData.type) || '';
-      if (ct.indexOf('application/x-www-form-urlencoded') >= 0) {
-        data = e.parameter || {};
-      } else if (ct.indexOf('application/json') >= 0) {
+      if (e && e.postData && e.postData.type && e.postData.type.indexOf('application/json') >= 0) {
         data = JSON.parse(e.postData.contents || '{}');
       } else {
         // Fallback: try parameter first then JSON parse
         data = (e && e.parameter && Object.keys(e.parameter).length) ? e.parameter : JSON.parse(e.postData && e.postData.contents || '{}');
       }
     } catch (parseErr) {
-      console.warn('POST body parse warning:', parseErr);
       data = (e && e.parameter) || {};
     }
 
@@ -283,47 +226,40 @@ function doPost(e) {
     // Check origin for CORS (best-effort)
     var origin = (e && e.parameter && e.parameter.origin) || (e && e.headers && e.headers.Origin);
     if (!isAllowedOrigin(origin)) {
-      return createResponse({ error: 'Unauthorized origin' }, 403);
+      return createResponse({ error: 'Unauthorized origin' });
     }
 
     // Verify idToken and get caller email
     var callerEmail = verifyIdToken((data && data.idToken) || (e && e.parameter && e.parameter.idToken));
-    if (!callerEmail) return createResponse({ error: 'Unauthorized' }, 401);
-    if (!isAllowedEmail(callerEmail)) return createResponse({ error: 'Forbidden' }, 403);
-    
+    if (!callerEmail) return createResponse({ error: 'Unauthorized' });
+    if (!isAllowedEmail(callerEmail)) return createResponse({ error: 'Forbidden' });
+
     var result;
-    switch(action) {
+    switch (action) {
       case 'create':
         result = createOrder({ ...data, _email: callerEmail });
         break;
-      case 'update':
-        result = updateOrder({ ...data, _email: callerEmail });
-        break;
+      
       case 'delete':
         result = deleteOrder({ ...data, _email: callerEmail });
         break;
       case 'orders':
-        // Support fetching orders via POST to avoid exposing idToken in URL
         result = getOrders({ ...data, _email: callerEmail });
         break;
       case 'stats':
-        // Support fetching stats via POST
         result = getStats({ ...data, _email: callerEmail });
         break;
       default:
         result = { error: 'Invalid action' };
     }
-    
+
     return createResponse(result);
   } catch (error) {
-    console.error('Error in doPost:', error);
     return createResponse({ error: error.toString() }, 500);
   }
 }
 
-/**
- * Create a new order
- */
+/** Create a new order */
 function createOrder(data) {
   const sheet = initializeSheet();
   const id = generateOrderId();
@@ -331,10 +267,10 @@ function createOrder(data) {
   const now = new Date();
   const timestampISO = now.toISOString();
   var caller = (data && data._email) || (data && data.createdBy) || (data && data.employee) || 'unknown@local';
-  // Force employee = caller email để đảm bảo quyền sở hữu
+  // Force employee = caller email
   var employeeEmail = String(caller).toLowerCase();
   var employeeName = getEmployeeNameByEmail(employeeEmail) || '';
-  
+
   const newRow = [
     id,
     // Store Date object in sheet for reliable sorting/filtering
@@ -345,9 +281,9 @@ function createOrder(data) {
     data.price || 0,
     data.notes || ''
   ];
-  
+
   sheet.appendRow(newRow);
-  
+
   return {
     success: true,
     order: {
@@ -363,18 +299,16 @@ function createOrder(data) {
   };
 }
 
-/**
- * Get orders with optional filters
- */
+/** Get orders with optional filters */
 function getOrders(params) {
   const sheet = initializeSheet();
   const data = sheet.getDataRange().getValues();
   var requester = params && params._email;
-  
+
   if (data.length <= 1) {
     return { orders: [], total: 0 };
   }
-  
+
   // Determine limit (cap by MAX_ORDERS_PER_REQUEST)
   var max = (CONFIG && CONFIG.MAX_ORDERS_PER_REQUEST) || 100;
   var limit = parseInt(params && params.limit, 10);
@@ -392,13 +326,13 @@ function getOrders(params) {
       haveDayFilter = true;
     }
   }
-  
+
   const orders = [];
   // Iterate from newest to oldest (bottom-up)
   for (var i = data.length - 1; i >= 1; i--) {
     var row = data[i];
-    
-    // Enforce ownership theo email nhân viên
+
+    // Enforce ownership by employee email
     if (requester && String(row[COLUMNS.EMPLOYEE]).toLowerCase() !== String(requester).toLowerCase()) {
       continue;
     }
@@ -410,7 +344,7 @@ function getOrders(params) {
     // Apply day filter (and break early when older than dayStart)
     if (haveDayFilter) {
       if (ts >= dayEnd) {
-        // This row is newer than the target day; keep scanning older ones
+        // Newer than the target day; keep scanning
         continue;
       }
       if (ts < dayStart) {
@@ -436,29 +370,18 @@ function getOrders(params) {
 
     if (orders.length >= limit) break;
   }
-  
-  // Orders are already in newest-first order due to bottom-up scan
-  return {
-    orders: orders,
-    total: orders.length
-  };
+
+  return { orders: orders, total: orders.length };
 }
 
-/**
- * Get statistics
- */
+/** Get statistics */
 function getStats(params) {
   const sheet = initializeSheet();
   const data = sheet.getDataRange().getValues();
   var requester = params && params._email;
-  
+
   if (data.length <= 1) {
-    return {
-      todayCount: 0,
-      todayRevenue: 0,
-      monthRevenue: 0,
-      totalOrders: 0
-    };
+    return { todayCount: 0, todayRevenue: 0, monthRevenue: 0, totalOrders: 0 };
   }
 
   const now = new Date();
@@ -470,7 +393,7 @@ function getStats(params) {
   let todayCount = 0;
   let todayRevenue = 0;
   let monthRevenue = 0;
-  let totalOrders = 0; // Count within current month (sufficient for UI)
+  let totalOrders = 0;
 
   // Iterate from newest to oldest; break when older than current month
   for (var i = data.length - 1; i >= 1; i--) {
@@ -515,17 +438,10 @@ function getStats(params) {
   };
 }
 
-/**
- * Update an order (mainly for marking as deleted)
- */
-function updateOrder(data) {
-  // Không hỗ trợ cập nhật trạng thái khi đã bỏ các cột H/I/J
-  return { success: false, error: 'Not supported' };
-}
+/** Update an order (not supported post clean-up) */
+// updateOrder removed (not supported)
 
-/**
- * Delete an order (soft delete)
- */
+/** Delete an order (by ID), only by owner */
 function deleteOrder(data) {
   var sheet = initializeSheet();
   var values = sheet.getDataRange().getValues();
@@ -533,7 +449,6 @@ function deleteOrder(data) {
 
   for (var i = 1; i < values.length; i++) {
     if (values[i][COLUMNS.ID] === data.id) {
-      // Chỉ cho phép nhân viên (theo email) xóa đơn của chính họ
       if (requester && String(values[i][COLUMNS.EMPLOYEE]).toLowerCase() !== String(requester).toLowerCase()) {
         return { success: false, error: 'Forbidden' };
       }
@@ -545,67 +460,28 @@ function deleteOrder(data) {
   return { success: false, error: 'Order not found' };
 }
 
-/**
- * Generate unique order ID
- */
+/** Generate unique order ID */
 function generateOrderId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
 
-/**
- * Check if origin is allowed (CORS)
- */
+/** Check if origin is allowed (CORS) */
 function isAllowedOrigin(origin) {
   if (!origin) return true; // Allow if no origin (e.g., direct access)
   return CONFIG.ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed));
 }
 
-/**
- * Create JSON response with CORS headers
- */
-function createResponse(data, status = 200) {
+/** Create JSON response */
+function createResponse(data, status) {
   const output = ContentService.createTextOutput(JSON.stringify(data));
   output.setMimeType(ContentService.MimeType.JSON);
-  
-  // Add CORS headers
   return output;
 }
 
-/**
- * Handle CORS preflight requests
- */
-function doOptions(e) {
-  return ContentService.createTextOutput('')
-    .setMimeType(ContentService.MimeType.TEXT);
-}
+/** Handle CORS preflight */
+// doOptions removed (Apps Script uses doGet/doPost)
 
-/**
- * Test function for development
- */
+/** Test helper */
 function testAPI() {
-  // Initialize sheet
   initializeSheet();
-  
-  // Test create order
-  const testOrder = {
-    employee: 'test@salon.com',
-    service: 'Cắt tóc',
-    price: 150000,
-    notes: 'Test order',
-    createdBy: 'test@salon.com'
-  };
-  
-  const result = createOrder(testOrder);
-  console.log('Create result:', result);
-  
-  // Test get orders
-  const orders = getOrders({});
-  console.log('Orders:', orders);
-  
-  // Test get stats
-  const stats = getStats({});
-  console.log('Stats:', stats);
 }
-
-
-
