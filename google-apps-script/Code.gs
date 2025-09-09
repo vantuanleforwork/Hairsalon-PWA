@@ -9,7 +9,7 @@
 // Configuration
 const CONFIG = {
   SPREADSHEET_ID: '1dqxdNQTdIvf7mccYMW825Xiuck-vK3kOOcHkn-YCphU', // Set by Codex
-  SHEET_NAME: 'Orders',
+  SHEET_NAME: 'Đơn hàng',
   GOOGLE_CLIENT_ID: '36454863313-tlsos46mj2a63sa6k4hjralerarugtku.apps.googleusercontent.com',
   // Không dùng nữa: quản lý email qua tab Employees
   ALLOWED_EMAILS: [],
@@ -38,13 +38,44 @@ function initializeEmployeesSheet() {
     ]]);
     sheet.getRange(1, 1, 1, 4).setFontWeight('bold');
     sheet.setFrozenRows(1);
+  try { var __vn = [''ID'',''Th?i gian'',''Email nh�n vi�n'',''T�n nh�n vi�n'',''D?ch v?'',''Gi�'',''Ghi ch�'']; sheet.getRange(1,1,1,__vn.Length).setValues([__vn]); } catch(e) {}
+    // Force Vietnamese headers on creation
+    try {
+      var __vn = ['ID','Thời gian','Email nhân viên','Tên nhân viên','Dịch vụ','Giá','Ghi chú'];
+      sheet.getRange(1, 1, 1, __vn.length).setValues([__vn]);
+    } catch (e) {}
   }
   return sheet;
 }
 
-/** Get Employees sheet (ensures it exists) */
+/** Get Employees sheet (ensures it exists, migrate tên + cột) */
 function getEmployeesSheet() {
-  return initializeEmployeesSheet();
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  let sheet = ss.getSheetByName('Nhân viên') || ss.getSheetByName('Employees');
+  if (!sheet) {
+    sheet = ss.insertSheet('Nhân viên');
+    sheet.getRange(1, 1, 1, 3).setValues([[ 'Email', 'Tên nhân viên', 'Vai trò' ]] );
+    sheet.getRange(1, 1, 1, 3).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  try { var __vn = [''ID'',''Th?i gian'',''Email nh�n vi�n'',''T�n nh�n vi�n'',''D?ch v?'',''Gi�'',''Ghi ch�'']; sheet.getRange(1,1,1,__vn.Length).setValues([__vn]); } catch(e) {}
+    return sheet;
+  }
+  if (sheet.getName() !== 'Nhân viên') {
+    sheet.setName('Nhân viên');
+  }
+  // Migration: xóa cột 'Kích hoạt' nếu còn, chuẩn hóa tiêu đề 3 cột đầu
+  try {
+    const header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    for (var i = header.length - 1; i >= 0; i--) {
+      var h = String(header[i]).trim().toLowerCase();
+      if (h === 'kích hoạt' || h === 'kich hoat' || h === 'active') {
+        sheet.deleteColumn(i + 1);
+      }
+    }
+    const newHeaders = ['Email', 'Tên nhân viên', 'Vai trò'];
+    sheet.getRange(1, 1, 1, newHeaders.length).setValues([newHeaders]);
+  } catch (e) {}
+  return sheet;
 }
 
 /** Read allowed (active) emails from Employees sheet */
@@ -56,7 +87,7 @@ function getAllowedEmails() {
     var row = values[i];
     var email = row[0]; // Email
     var active = row[2]; // Kích hoạt
-    if (email && (active === true || String(active).toLowerCase() === 'true' || String(active).trim() === '1' || String(active).toLowerCase() === 'yes')) {
+    if (email) {
       emails.push(String(email).toLowerCase());
     }
   }
@@ -121,6 +152,13 @@ const COLUMNS = {
 function initializeSheet() {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   let sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+  if (!sheet) {
+    const legacy = ss.getSheetByName('Orders');
+    if (legacy) {
+      legacy.setName(CONFIG.SHEET_NAME);
+      sheet = legacy;
+    }
+  }
   
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.SHEET_NAME);
@@ -136,6 +174,7 @@ function initializeSheet() {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
     sheet.setFrozenRows(1);
+  try { var __vn = [''ID'',''Th?i gian'',''Email nh�n vi�n'',''T�n nh�n vi�n'',''D?ch v?'',''Gi�'',''Ghi ch�'']; sheet.getRange(1,1,1,__vn.Length).setValues([__vn]); } catch(e) {}
   } else {
     // Migration: nếu chưa có cột "Tên nhân viên", chèn cột D và đặt tiêu đề
     const firstRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -155,6 +194,7 @@ function initializeSheet() {
       if (sheet.getLastColumn() >= 10) {
         sheet.deleteColumn(10);
       }
+  try { var __vn2 = ['ID','Th?i gian','Email nh�n vi�n','T�n nh�n vi�n','D?ch v?','Gi�','Ghi ch�']; sheet.getRange(1,1,1,__vn2.Length).setValues([__vn2]); } catch(e) {}
       // Nếu có I (9)
       if (sheet.getLastColumn() >= 9) {
         sheet.deleteColumn(9);
@@ -566,3 +606,6 @@ function testAPI() {
   const stats = getStats({});
   console.log('Stats:', stats);
 }
+
+
+
