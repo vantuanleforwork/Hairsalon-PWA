@@ -76,11 +76,17 @@ window.saveOrderRealtime = async function(order) {
             window.createOrder({
                 employee: order.employee,
                 service: order.service,
+                // Backend accepts both VND and thousands; we send VND
                 price: order.price,
                 notes: order.notes
             }),
             new Promise((_, reject) => setTimeout(() => reject(new Error('API timeout after 10s')), 10000))
         ]);
+
+        // Surface backend errors
+        if (response && (response.error || response.success === false)) {
+            throw new Error(response.error || 'API error');
+        }
 
         // Some GAS deployments (no-cors) don't return full JSON; normalize for UI
         const raw = (response && (response.order || response)) || {};

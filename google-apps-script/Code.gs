@@ -120,11 +120,27 @@ const RateLimiter = {
 /** Input validation */
 const Validator = {
   validatePrice: function(price) {
+    // Accept either thousands-units (legacy) or full VND amounts
+    // CONFIG.MIN_PRICE/MAX_PRICE are in thousands
     const numPrice = Number(price);
-    if (isNaN(numPrice) || numPrice < CONFIG.MIN_PRICE || numPrice > CONFIG.MAX_PRICE) {
-      throw new Error('Giá không hợp lệ (1-50,000 nghìn đồng)');
+    if (isNaN(numPrice)) {
+      throw new Error('Giá không hợp lệ (không phải số)');
     }
-    return numPrice;
+
+    // Normalize to VND
+    const MIN_VND = CONFIG.MIN_PRICE * 1000;      // 1,000 VND
+    const MAX_VND = CONFIG.MAX_PRICE * 1000;      // 50,000,000 VND
+
+    let vnd = numPrice;
+    // If looks like thousands-based input (legacy), convert to VND
+    if (numPrice >= CONFIG.MIN_PRICE && numPrice <= CONFIG.MAX_PRICE) {
+      vnd = numPrice * 1000;
+    }
+
+    if (vnd < MIN_VND || vnd > MAX_VND) {
+      throw new Error('Giá không hợp lệ (1,000 - 50,000,000 VND)');
+    }
+    return vnd;
   },
   
   validateService: function(service) {
