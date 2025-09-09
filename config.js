@@ -62,13 +62,5 @@ try {
     // Ignore if window/globalThis not available in current context
 }
 
-// Debug info
-console.log('Config loaded:', {
-    hasClientId: !!APP_CONFIG.GOOGLE_CLIENT_ID && !APP_CONFIG.GOOGLE_CLIENT_ID.includes('DEMO'),
-    clientIdPreview: (APP_CONFIG.GOOGLE_CLIENT_ID || '').substring(0, 20) + '...',
-    allowedEmails: (APP_CONFIG.ALLOWED_EMAILS || []).length,
-    productionUrl: APP_CONFIG.PRODUCTION_URL,
-    currentUrl: (typeof window !== 'undefined' ? window.location.href : ''),
-    isDemo: APP_CONFIG.DEBUG_MODE
-});
+// Config loaded successfully
 

@@ -1,7 +1,7 @@
 // Google OAuth Authentication Module for Salon Manager
 'use strict';
 
-console.log('Auth module loading...');
+// Auth module initialized
 
 // Global auth state
 window.AUTH_STATE = {
@@ -12,7 +12,7 @@ window.AUTH_STATE = {
 
 // Initialize authentication
 window.initAuth = function(callbacks = {}) {
-    console.log('Đang khởi tạo xác thực...');
+    // Initializing authentication
 
     // Store callbacks
     window.authCallbacks = callbacks;
@@ -26,7 +26,7 @@ window.initAuth = function(callbacks = {}) {
             if (user && user.email && isEmailAllowed(user.email)) {
                 window.AUTH_STATE.user = user;
                 window.AUTH_STATE.isLoggedIn = true;
-                console.log('Khôi phục phiên cho:', user.email);
+                // Session restored for user
                 // Auto-login with saved user
                 if (callbacks.onLoginSuccess) {
                     callbacks.onLoginSuccess(user);
@@ -59,7 +59,7 @@ window.initAuth = function(callbacks = {}) {
     if (typeof google !== 'undefined' && google.accounts) {
         initializeGoogleSignIn();
     } else {
-        console.log('Đang chờ Google API...');
+        // Waiting for Google API
         // If load already fired, still try polling
         if (document.readyState === 'complete') {
             waitForGoogleAndInit();
@@ -104,7 +104,7 @@ function initializeGoogleSignIn() {
     // Check if Client ID exists
     if (!window.APP_CONFIG.GOOGLE_CLIENT_ID) {
         console.error('Thiếu Google Client ID trong config!');
-        console.error('APP_CONFIG:', window.APP_CONFIG);
+        // Missing Google Client ID in config
         showError('Thiếu cấu hình đăng nhập Google');
         return;
     }
@@ -122,7 +122,7 @@ function initializeGoogleSignIn() {
         });
 
         window.AUTH_STATE.initialized = true;
-        console.log('Đã khởi tạo Google Sign-In');
+        // Google Sign-In initialized
 
         // Render the sign-in button if container exists
         const buttonContainer = document.getElementById('googleLoginContainer');

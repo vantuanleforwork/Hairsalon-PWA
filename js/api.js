@@ -1,7 +1,7 @@
 // API module for Google Apps Script integration
 'use strict';
 
-console.log('dYs? API module loading...');
+// API module initialized
 
 // API Configuration
 const API_CONFIG = {
@@ -14,7 +14,6 @@ const API_CONFIG = {
 function initAPI() {
     if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.API_BASE_URL) {
         API_CONFIG.baseURL = APP_CONFIG.API_BASE_URL;
-        console.log('API initialized:', API_CONFIG.baseURL.substring(0, 50) + '...');
         return true;
     }
     console.warn('API URL not configured');
@@ -33,7 +32,11 @@ function jsonpGet(params) {
         const src = API_CONFIG.baseURL + sep + qs.toString() + (qs.toString() ? '&' : '') + 'callback=' + cb;
 
         const cleanup = () => {
-            try { delete window[cb]; } catch (_) { window[cb] = undefined; }
+            try { 
+                delete window[cb]; 
+            } catch (err) { 
+                window[cb] = undefined; 
+            }
             if (script && script.parentNode) script.parentNode.removeChild(script);
             if (timer) clearTimeout(timer);
         };
@@ -41,12 +44,16 @@ function jsonpGet(params) {
         window[cb] = (data) => {
             try {
                 if (data && (data.error === 'Unauthorized' || data.error === 'Forbidden')) {
-                    try { if (typeof window.onAuthExpired === 'function') window.onAuthExpired(); } catch (_) {}
+                    if (typeof window.onAuthExpired === 'function') {
+                        window.onAuthExpired();
+                    }
                     cleanup();
                     reject(new Error(data.error));
                     return;
                 }
-            } catch (_) {}
+            } catch (err) {
+                // Ignore parse errors for non-auth responses
+            }
             cleanup();
             resolve(data);
         };
@@ -147,7 +154,7 @@ async function apiCall(endpoint, method = 'GET', data = null, retryCount = 0) {
             const params = new URLSearchParams(data);
             const separator = url.includes('?') ? '&' : '?';
             const finalUrl = url + (params.toString() ? (separator + params.toString()) : '');
-            console.log('API GET:', finalUrl);
+            // API GET request
             try {
                 const response = await fetch(finalUrl, { ...options, method: 'GET' });
                 if (response.ok) {
@@ -168,12 +175,12 @@ async function apiCall(endpoint, method = 'GET', data = null, retryCount = 0) {
             // For POST requests, add data to body as JSON (legacy)
             options.headers['Content-Type'] = 'application/json';
             options.body = JSON.stringify(data);
-            console.log('API POST (json):', url, Object.keys(data));
+            // API POST request
         }
     }
     
     try {
-        console.log(`dYs? API call: ${method} ${url}`);
+        // API call initiated
         const response = await fetch(url, options);
         
         // Handle different response types

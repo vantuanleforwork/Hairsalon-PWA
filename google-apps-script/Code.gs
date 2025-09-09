@@ -12,7 +12,14 @@ const CONFIG = {
   SPREADSHEET_ID: '1dqxdNQTdIvf7mccYMW825Xiuck-vK3kOOcHkn-YCphU',
   SHEET_NAME: 'Đơn hàng',
   GOOGLE_CLIENT_ID: '36454863313-tlsos46mj2a63sa6k4hjralerarugtku.apps.googleusercontent.com',
-  MAX_ORDERS_PER_REQUEST: 100
+  MAX_ORDERS_PER_REQUEST: 100,
+  // Rate limiting
+  RATE_LIMIT_REQUESTS: 60, // Max requests per time window
+  RATE_LIMIT_WINDOW: 60 * 1000, // Time window in milliseconds (1 minute)
+  MAX_PRICE: 50000, // Maximum price in thousands (50 million VND)
+  MIN_PRICE: 1, // Minimum price in thousands (1000 VND)
+  MAX_NOTES_LENGTH: 500, // Maximum notes length
+  MAX_SERVICE_NAME_LENGTH: 100 // Maximum service name length
 };
 
 /** Ensure Employees sheet exists with proper headers */
@@ -84,6 +91,68 @@ function isAllowedEmail(email) {
   var list = getAllowedEmails();
   return list.indexOf(e) >= 0;
 }
+
+/** Rate limiting implementation */
+const RateLimiter = {
+  cache: CacheService.getScriptCache(),
+  
+  checkLimit: function(email) {
+    const key = 'rate_' + email;
+    const current = this.cache.get(key);
+    
+    if (!current) {
+      // First request, initialize counter
+      this.cache.put(key, '1', CONFIG.RATE_LIMIT_WINDOW / 1000);
+      return true;
+    }
+    
+    const count = parseInt(current);
+    if (count >= CONFIG.RATE_LIMIT_REQUESTS) {
+      return false; // Rate limit exceeded
+    }
+    
+    // Increment counter
+    this.cache.put(key, String(count + 1), CONFIG.RATE_LIMIT_WINDOW / 1000);
+    return true;
+  }
+};
+
+/** Input validation */
+const Validator = {
+  validatePrice: function(price) {
+    const numPrice = Number(price);
+    if (isNaN(numPrice) || numPrice < CONFIG.MIN_PRICE || numPrice > CONFIG.MAX_PRICE) {
+      throw new Error('Giá không hợp lệ (1-50,000 nghìn đồng)');
+    }
+    return numPrice;
+  },
+  
+  validateService: function(service) {
+    if (!service || typeof service !== 'string' || service.trim().length === 0) {
+      throw new Error('Dịch vụ không được để trống');
+    }
+    if (service.length > CONFIG.MAX_SERVICE_NAME_LENGTH) {
+      throw new Error('Tên dịch vụ quá dài');
+    }
+    // Sanitize input to prevent injection
+    return service.trim().replace(/[<>"']/g, '');
+  },
+  
+  validateNotes: function(notes) {
+    if (notes && notes.length > CONFIG.MAX_NOTES_LENGTH) {
+      throw new Error('Ghi chú quá dài');
+    }
+    // Sanitize input
+    return notes ? notes.trim().replace(/[<>"']/g, '') : '';
+  },
+  
+  validateDate: function(date) {
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      throw new Error('Ngày không hợp lệ');
+    }
+    return date;
+  }
+};
 
 /** Verify Google ID Token and return email (or null) */
 function verifyIdToken(idToken) {
@@ -165,6 +234,12 @@ function doGet(e) {
       var email = verifyIdToken(params && params.idToken);
       if (!email) return createResponse({ error: 'Unauthorized' });
       if (!isAllowedEmail(email)) return createResponse({ error: 'Forbidden' });
+      
+      // Check rate limit
+      if (!RateLimiter.checkLimit(email)) {
+        return createResponse({ error: 'Quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.' });
+      }
+      
       // attach for downstream filtering
       params._email = email;
     }
@@ -222,6 +297,11 @@ function doPost(e) {
     var callerEmail = verifyIdToken((data && data.idToken) || (e && e.parameter && e.parameter.idToken));
     if (!callerEmail) return createResponse({ error: 'Unauthorized' });
     if (!isAllowedEmail(callerEmail)) return createResponse({ error: 'Forbidden' });
+    
+    // Check rate limit
+    if (!RateLimiter.checkLimit(callerEmail)) {
+      return createResponse({ error: 'Quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.' });
+    }
 
     var result;
     switch (action) {
@@ -250,42 +330,54 @@ function doPost(e) {
 
 /** Create a new order */
 function createOrder(data) {
-  const sheet = initializeSheet();
-  const id = generateOrderId();
-  // Use Date object for stable storage and ISO for API response
-  const now = new Date();
-  const timestampISO = now.toISOString();
-  var caller = (data && data._email) || (data && data.createdBy) || (data && data.employee) || 'unknown@local';
-  // Force employee = caller email
-  var employeeEmail = String(caller).toLowerCase();
-  var employeeName = getEmployeeNameByEmail(employeeEmail) || '';
+  try {
+    // Validate inputs
+    const validatedService = Validator.validateService(data.service);
+    const validatedPrice = Validator.validatePrice(data.price);
+    const validatedNotes = Validator.validateNotes(data.notes);
+    
+    const sheet = initializeSheet();
+    const id = generateOrderId();
+    // Use Date object for stable storage and ISO for API response
+    const now = new Date();
+    const timestampISO = now.toISOString();
+    var caller = (data && data._email) || (data && data.createdBy) || (data && data.employee) || 'unknown@local';
+    // Force employee = caller email
+    var employeeEmail = String(caller).toLowerCase();
+    var employeeName = getEmployeeNameByEmail(employeeEmail) || '';
 
-  const newRow = [
-    id,
-    // Store Date object in sheet for reliable sorting/filtering
-    now,
-    employeeEmail,
-    employeeName,
-    data.service || '',
-    data.price || 0,
-    data.notes || ''
-  ];
+    const newRow = [
+      id,
+      // Store Date object in sheet for reliable sorting/filtering
+      now,
+      employeeEmail,
+      employeeName,
+      validatedService,
+      validatedPrice,
+      validatedNotes
+    ];
 
-  sheet.appendRow(newRow);
+    sheet.appendRow(newRow);
 
-  return {
-    success: true,
-    order: {
-      id: id,
-      // Return ISO string to clients
-      timestamp: timestampISO,
-      employee: employeeEmail,
-      employeeName: employeeName,
-      service: data.service,
-      price: data.price,
-      notes: data.notes
-    }
-  };
+    return {
+      success: true,
+      order: {
+        id: id,
+        // Return ISO string to clients
+        timestamp: timestampISO,
+        employee: employeeEmail,
+        employeeName: employeeName,
+        service: validatedService,
+        price: validatedPrice,
+        notes: validatedNotes
+      }
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || error.toString()
+    };
+  }
 }
 
 /** Get orders with optional filters */

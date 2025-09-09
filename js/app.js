@@ -7,7 +7,7 @@ if ('serviceWorker' in navigator) {
         var __ver = (window.APP_CONFIG && window.APP_CONFIG.APP_VERSION) ? window.APP_CONFIG.APP_VERSION : '1.0.0';
         navigator.serviceWorker.register('sw.js?v=' + encodeURIComponent(__ver), { scope: './' })
             .then(function(reg) {
-                console.log('Service Worker registered:', reg.scope);
+                // Service Worker registered successfully
 
                 let pendingReload = false;
 
@@ -58,14 +58,21 @@ if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.addEventListener('controllerchange', function() {
                     hideUpdateBanner();
                     if (pendingReload) {
-                        try { console.log('New service worker active, reloading (user-initiated)...'); } catch (_) {}
+                        // New service worker active, reloading
                         window.location.reload();
                     }
                 });
 
                 // Proactively check for updates now and periodically
-                try { reg.update(); } catch (_) {}
-                setInterval(function(){ try { reg.update(); } catch (_) {} }, 60 * 60 * 1000); // every hour
+                // Check for updates
+                reg.update().catch(function(err) {
+                    console.warn('Update check failed:', err);
+                });
+                setInterval(function(){ 
+                    reg.update().catch(function(err) {
+                        console.warn('Periodic update check failed:', err);
+                    });
+                }, 60 * 60 * 1000); // every hour
             })
             .catch(function(err) { console.warn('Service Worker registration failed:', err); });
     });
@@ -99,7 +106,11 @@ function bootstrapApp() {
 
         // Delay to ensure all modules are loaded
         setTimeout(() => {
-            try { initializeAuth(); } catch (e) { console.warn('Auth init error:', e); }
+            if (typeof initializeAuth === 'function') {
+                initializeAuth();
+            } else {
+                console.warn('Auth module not loaded yet');
+            }
         }, 500);
 
         updateDateTime();
@@ -107,6 +118,10 @@ function bootstrapApp() {
         setInterval(updateDateTime, 60000);
     } catch (err) {
         console.error('Bootstrap error:', err);
+        // Show error to user
+        if (elements.toast) {
+            showToast('Lỗi khởi động ứng dụng', 'error');
+        }
     }
 }
 
@@ -269,19 +284,32 @@ async function handleOrderSubmit(e) {
     const price = priceInThousands * 1000; // Convert to actual VND
     const notes = elements.notesInput.value.trim();
     
-    // Validate
-    if (!service) {
-        showToast('Vui lòng chọn dịch vụ', 'error');
-        return;
-    }
-    
-    if (!priceInThousands || priceInThousands <= 0) {
-        showToast('Vui lòng nhập giá tiền hợp lệ', 'error');
-        return;
-    }
-    
-    if (priceInThousands > 50000) {
-        showToast('Giá tiền không được vượt quá 50 triệu', 'error');
+    // Client-side validation
+    try {
+        // Validate using ClientValidator if available
+        if (typeof ClientValidator !== 'undefined') {
+            ClientValidator.validateService(service);
+            ClientValidator.validatePrice(priceInThousands);
+            ClientValidator.validateNotes(notes);
+        } else {
+            // Fallback validation
+            if (!service) {
+                showToast('Vui lòng chọn dịch vụ', 'error');
+                return;
+            }
+            
+            if (!priceInThousands || priceInThousands <= 0) {
+                showToast('Vui lòng nhập giá tiền hợp lệ', 'error');
+                return;
+            }
+            
+            if (priceInThousands > 50000) {
+                showToast('Giá tiền không được vượt quá 50 triệu', 'error');
+                return;
+            }
+        }
+    } catch (validationError) {
+        showToast(validationError.message, 'error');
         return;
     }
     

@@ -1,5 +1,38 @@
 'use strict';
 
+// Client-side validation
+const ClientValidator = {
+    MAX_PRICE: 50000, // 50 million VND
+    MIN_PRICE: 1, // 1000 VND
+    MAX_NOTES_LENGTH: 500,
+    MAX_SERVICE_NAME_LENGTH: 100,
+    
+    validatePrice: function(price) {
+        const numPrice = Number(price);
+        if (isNaN(numPrice) || numPrice < this.MIN_PRICE || numPrice > this.MAX_PRICE) {
+            throw new Error('Giá phải từ 1,000 đến 50,000,000 VNĐ');
+        }
+        return numPrice;
+    },
+    
+    validateService: function(service) {
+        if (!service || service.trim().length === 0) {
+            throw new Error('Vui lòng chọn dịch vụ');
+        }
+        if (service.length > this.MAX_SERVICE_NAME_LENGTH) {
+            throw new Error('Tên dịch vụ quá dài (tối đa 100 ký tự)');
+        }
+        return service.trim();
+    },
+    
+    validateNotes: function(notes) {
+        if (notes && notes.length > this.MAX_NOTES_LENGTH) {
+            throw new Error('Ghi chú quá dài (tối đa 500 ký tự)');
+        }
+        return notes ? notes.trim() : '';
+    }
+};
+
 console.log('Utils module loaded');
 
 // Delete order via API and refresh list
